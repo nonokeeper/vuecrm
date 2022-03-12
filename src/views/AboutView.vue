@@ -4,6 +4,10 @@
   </div>
 </template>
 
+<script setup lang="ts">
+console.log('AboutView.vue');
+</script>
+
 <style>
 @media (min-width: 1024px) {
   .about {

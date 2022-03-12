@@ -1,18 +1,19 @@
 <template>
-  <div class="item">
-    <i>
+  <div class="mt-2 flex">
+    <i class="flex items-center">
       <slot name="icon"></slot>
     </i>
-    <div class="details">
-      <h3>
+    <div class="max-w-2xl">
+      <div class="text-xl text-gray-800 dark:text-gray-100">
         <slot name="heading"></slot>
-      </h3>
+      </div>
       <slot></slot>
     </div>
   </div>
 </template>
 
 <style scoped>
+/*
 .item {
   margin-top: 2rem;
   display: flex;
@@ -82,5 +83,5 @@ h3 {
   .item:last-of-type:after {
     display: none;
   }
-}
+}*/
 </style>

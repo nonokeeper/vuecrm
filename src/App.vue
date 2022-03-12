@@ -1,119 +1,41 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from '@/components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+  <!--
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <div class="border-b-2 border-gray-900 dark:border-gray-100 bg-white dark:bg-cyan-800 flex flex-shrink w-full">
+    <div class="mx-4 p-2 min-w-fit">
+      <RouterLink to="/"><img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="25" /></RouterLink>
     </div>
-  </header>
-
-  <RouterView />
+    <div class="mx-4 p-2">
+        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/">Home</AppLink>
+        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/about">About</AppLink>
+        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/customer">Customers</AppLink>
+        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/data">Data Explorer</AppLink>
+    </div>
+    <div class="mx-4 p-2 flex-1 text-right mr-4">
+      <input checked type="checkbox" @click="toggleDarkMode" id="toggle" class="accent-green-600"/>
+      <label for="toggle" class="text-gray-800 dark:text-gray-100 p-2">Night/Day</label>
+    </div>
+  </div>
+  <div class="m-4">
+    <RouterView />
+  </div>
+  
 </template>
 
-<style>
-@import '@/assets/base.css';
+<script setup lang="ts">
+import { RouterLink, RouterView } from 'vue-router'
+import AppLink from '@/components/Nav/AppLink.vue'
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-
-  font-weight: normal;
-}
-
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-}
-
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+const toggleDarkMode = () => {
+  const checkbox = document.querySelector("#toggle") as HTMLInputElement;
+  const html = document.querySelector("html") as HTMLHtmlElement;
+  if (!checkbox) return null;
+  if (checkbox.checked) {
+    html?.classList.add("dark")
+  } else {
+    html?.classList.remove("dark")
   }
 }
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>
+</script>
