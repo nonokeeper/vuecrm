@@ -1,12 +1,14 @@
 <template>
-<div class="mt-2 mb-4">
+<div class="mt-2 mb-4" :class="showConfirmDialog? 'blur-sm' : ''">
     <table id="customers">
     <thead>
         <tr class="text-left text-white">
         <th class="px-3 py-2">
             &nbsp;
         </th>
-        <th class="text-yellow-800 dark:text-yellow-100 px-3 py-2" v-for="(meta, index) in props.customersMeta" v-bind:key="index"><span>{{ meta?.label }}</span></th>
+        <th class="text-yellow-800 dark:text-yellow-100 px-3 py-2" v-for="(meta, index) in props.customersMeta" v-bind:key="index">
+            <span class="whitespace-nowrap">{{ meta?.label }}</span>
+        </th>
         <th colspan=2 class="px-3 py-2">
         </th>
         </tr>

@@ -1,32 +1,51 @@
 <template>
-  <!--
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <div class="border-b-2 border-gray-900 dark:border-gray-100 bg-white dark:bg-cyan-800 flex flex-shrink w-full">
+  <div class="border-b-2 border-gray-900 dark:border-gray-100 bg-white dark:bg-cyan-800 flex w-full">
     <div class="mx-4 p-2 min-w-fit">
       <RouterLink to="/"><img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="25" /></RouterLink>
     </div>
-    <div class="mx-4 p-2">
-        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/">Home</AppLink>
-        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/about">About</AppLink>
-        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/customer">Customers</AppLink>
-        <AppLink class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" to="/data">Data Explorer</AppLink>
+    <div class="mx-4 p-2 hidden md:flex flex-grow">
+      <AppLink v-for="(key, index) in menu" v-bind:key="index" class="mx-4" inactive-class="text-sky-800 dark:text-sky-200" active-class="text-yellow-600 dark:text-yellow-200" :to="key.path">{{ key.name }}</AppLink>
     </div>
-    <div class="mx-4 p-2 flex-1 text-right mr-4">
-      <input checked type="checkbox" @click="toggleDarkMode" id="toggle" class="accent-green-600"/>
-      <label for="toggle" class="text-gray-800 dark:text-gray-100 p-2">Night/Day</label>
+
+    <div @click="toggleMenu" class="md:hidden my-2">
+      <svg v-if="!menuOpened" viewBox="0 0 100 40" width="20" height="20">
+        <g fill="white">
+        <rect width="100" height="7"></rect>
+        <rect y="30" width="100" height="7"></rect>
+        <rect y="60" width="100" height="7"></rect>
+        </g>
+      </svg>
+      <svg v-if="menuOpened" viewBox="0 0 100 40" width="20" height="20">
+        <line x1="0" y1="0" x2="150" y2="100" stroke="white" stroke-width="7" />
+        <line x1="100" y1="0" x2="-50" y2="100" stroke="white" stroke-width="7" />
+      </svg>
+    </div>
+    <div class="mx-4 p-2 mr-4 inline-flex flex-1">
+      <div class="flex-1"></div>
+      <div><input checked type="checkbox" @click="toggleDarkMode" id="toggle" class="accent-green-600"/></div>
+      <div><label for="toggle" class="text-gray-800 dark:text-gray-100 p-2">Night/Day</label></div>
     </div>
   </div>
-  <div class="m-4">
+
+  <div class="m-4 inline-flex">
+    <div v-if="menuOpened" class="overflow-visible">AAA</div>
     <RouterView />
   </div>
   
 </template>
 
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import AppLink from '@/components/Nav/AppLink.vue'
+import router from './router';
+import { ref } from 'vue';
+import AppLink from './components/Nav/AppLink.vue';
+
+const menu = router.options.routes;
+const menuOpened = ref(false);
+
+const toggleMenu = () => {
+  menuOpened.value = !menuOpened.value;
+}
 
 const toggleDarkMode = () => {
   const checkbox = document.querySelector("#toggle") as HTMLInputElement;

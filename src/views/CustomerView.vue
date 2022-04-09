@@ -1,18 +1,22 @@
 <template>
   <main>
     <div v-if="list" class="mt-2 mb-4">
-      {{ nbCustomers }} Customers :
-      <button v-show="!loaded" class="inline-flex ml-8 mr-2 bg-yellow-600 text-white rounded-lg shadow-lg px-2 py-2 hover:bg-yellow-700">
-        <svg class="animate-spin mr-2 h-auto w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-100" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Loading...
-      </button>
-      <button v-show="loaded" class="inline-flex ml-8 mr-2 bg-yellow-600 text-white rounded-lg shadow-lg px-2 py-2 hover:bg-yellow-700" v-on:click="refresh">Refresh</button>
-      <button class="inline-flex ml-8 mr-2 bg-yellow-600 text-white rounded-lg shadow-lg px-2 py-2 hover:bg-yellow-700" v-on:click="openCreate"><i class="fa fa-plus-circle" aria-hidden="true">&nbsp;</i>New</button>
+      <div class="relative m-4">
+        <span class="absolute inset-y-0 left-3 flex items-center pl-2">
+          <svg fill="none" stroke="#BBBBBB" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-6 h-6"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </span>
+        <input v-model="search" placeholder="Search" type="text" class="border border-gray-300 ml-4 px-8 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
+        <span @click="search=''" class="absolute inset-y-0 left-60 flex items-center">
+          <i class="text-gray-400 dark:text-gray-300 fa-regular fa-circle-xmark"></i>
+        </span>
+      </div>
+      <div class="inline-block space-x-6">
+        {{ nbCustomers }} Customers
+        <refresh-button :text="refreshText" @click="refresh"/>
+        <create-button text="New customer" @click="openCreate"/>
+      </div>
     </div>
-    <customer-list v-if="list" @edit="getCustomer" @delete="deletion" :customers="customers" :customers-meta="customersMeta"/>
+    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="filteredCustomers" :customers-meta="customersMeta"/>
     <customer-edit v-if="edit && customer" @cancelEdit="cancelEdit" :customer="customer" :customer-meta="customersMeta"/>
     <customer-create v-if="create" @cancelCreate="cancelCreate" @created="created" :customer-meta="customersMeta"></customer-create>
   </main>
@@ -20,49 +24,51 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onBeforeMount, computed } from 'vue';
 import CustomerService from '@/services/CustomerService';
+
 import CustomerList from '@/components/Customer/CustomerList.vue';
 import CustomerEdit from '@/components/Customer/CustomerEdit.vue';
 import CustomerCreate from '@/components/Customer/CustomerCreate.vue';
-import { ref, onBeforeMount } from 'vue';
+import RefreshButton from '@/components/Button/RefreshButton.vue';
+import CreateButton from '@/components/Button/CreateButton.vue';
 
 const loaded = ref(false);
-const isCheckAll = ref(false);
-const createErrorFlag = ref(false);
-const updateErrorFlag = ref(false);
+const refreshText = ref('Refresh');
 const edit = ref(false);
 const create = ref(false);
 const list = ref(true);
+const search = ref('');
+const customer = ref<CustomerInterface>();
+const customers = ref<CustomerInterface[]>([{"default":"x"}]);
+const customersMeta = ref<CustomerInterface>([{"default":"x"}]);
+let nbCustomers = ref(0);
+
+const isCheckAll = ref(false);
+const createErrorFlag = ref(false);
+const updateErrorFlag = ref(false);
 const showModal = ref(false);
 const showMessage = ref(false);
 const message = ref('');
 const createError = ref('');
 const updateError = ref('');
-const search = ref('');
-const delay = ref(3000);
-const promise = ref([]);
-const customer = ref<CustomerInterface>();
-const customers = ref<CustomerInterface[]>([{"default":"x"}]);
-const filteredCustomers = ref<CustomerInterface[]>([{"default":"x"}]);
 const checkedItems = ref([]);
-const customersMeta = ref<CustomerInterface>([{"default":"x"}]);
 let customersArray = Array<CustomerInterface>([{"default":"x"}]);
-let nbCustomers = ref(0);
 
 console.log('CustomerView.vue');
 
 // Data recovered before displaying results in Template
 onBeforeMount( async () => {
+  refreshText.value = 'Loading...';
   loaded.value = false;
-  //console.log('beforeMount : ',customers.value[0]);
   customersMeta.value = await CustomerService.getCustomersMeta();
   customers.value = await CustomerService.getCustomers();
-  filteredCustomers.value = customers.value;
   if (customers.value) {
     customersArray = customers.value;
     nbCustomers.value = customers.value.length
   }
   loaded.value = true;
+  refreshText.value = 'Refresh';
 })
 
 // Interfaces
@@ -100,24 +106,30 @@ const deletion = async (id:string) => {
 };
 
 const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:CustomerInterface) => {
-  const levelup:string = meta.levelup
-  var tab = levelup.split('.')
+  const levelup:string = meta?.levelup
+  var tab = levelup?.split('.')
   if (levelup === '') return cust[index] // return the field directly if no hierarchy
-  for (var i=0; i< tab.length; i++) { // loop with all levels separated by a dot
-    if (!cust)
-      return '' // as soon as one level does not exist, exit with empty result
-    cust = cust[tab[i]]
-  }
+  if (tab?.length >= 0)
+    for (var i=0; i< tab.length; i++) { // loop with all levels separated by a dot
+      if (!cust)
+        return '' // as soon as one level does not exist, exit with empty result
+      cust = cust[tab[i]]
+    }
   if (cust) return cust[index]
   return '' // default empty value if the last level does not exist
 }
 
 const refresh = async () => {
+  refreshText.value = 'Loading...'
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
   customers.value = await CustomerService.getCustomers();
+  customersArray = customers.value;
   nbCustomers.value = customers.value.length
+  search.value = 'X'; // only to reload filteredCustomers
+  search.value = ''; // only to reload filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
+  refreshText.value = 'Refresh';
 };
 
 const openCreate = () => {
@@ -137,6 +149,6 @@ const testCustomer = (cust: CustomerInterface) => {
 
 // Computed variables
 
-// const filteredCustomers = computed(() => customersArray.filter((cust: CustomerInterface) => testCustomer(cust)));
+const filteredCustomers = computed(() => customersArray.filter((cust: CustomerInterface) => testCustomer(cust)));
 
 </script>

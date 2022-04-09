@@ -2,35 +2,60 @@
     <div class="ml-8 mb-4 container">
         <div>
             <span @click="cancel" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to Customers List</span>
-            <span :class="{ invisible: !showMessage}" class="ml-4 rounded border-l-4 bg-green-400 text-sm text-white px-2 py-3 border-green-800 shadow-xl items-center">
+            <span :class="{ invisible: !showMessage}" class="ml-4 rounded border-l-4 bg-yellow-500 text-sm text-white px-3 py-2 border-yellow-800 shadow-xl items-center">
             {{ message }}<i @click="showMessage = false" class="ml-2 far fa-times-circle"></i>
             </span>
         </div>
-        <form name="update" ref="updateForm" @submit.prevent="createCust">
+        <form @submit.prevent="createCust" method="POST">
             <div class="mt-8 mb-6 grid grid-cols-3 gap-8">
-            <div class="" v-for="(meta, index) in props.customerMeta" v-bind:key="index">
-                <label :for="index.toString()" class="block left-1 -top-2 dark:text-gray-100 text-gray-800 text-sm">{{ meta.label }}</label>
-                <input :required="meta.required" :id="index.toString()" class="py-2 text-sm border rounded-md px-2 text-gray-800 focus:outline-none dark:border-2 dark:focus:border-yellow-200 focus:border-yellow-800"/>
+                <div class="relative flex items-center" v-for="(meta, index) in props.customerMeta" v-bind:key="index">
+                    <label :id="'label-'+index.toString()" :for="index.toString()" :class="labelClass">{{ meta.label }}</label>
+                    <svg v-if="index.toString() === 'email'" xmlns="http://www.w3.org/2000/svg" class="pointer-events-none w-7 h-7 absolute top-1/2 transform -translate-y-1/2 left-2" viewBox="0 0 20 20" fill="gray">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    <input @focusout="focusChange" :class="emailPadding(index.toString())" :type="metaType(index.toString())" :required="meta.required" :id="index.toString()" class="required:border-l-red-500 pr-2 text-sm border rounded-md py-2 text-gray-800 focus:outline-none dark:border-2 dark:focus:border-yellow-200 focus:border-yellow-800"/>
+                </div>
             </div>
-            </div>
-            <div class="flex items-stretch">
-            <button type="reset" class="rounded px-2 py-1 text-gray-100 bg-gray-500 hover:bg-gray-600" @click="cancel">Cancel</button>
-            <button class="disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded ml-4 px-2 py-1 text-gray-100 bg-yellow-600 hover:bg-yellow-700" type="button" @click="createCust">Save</button>
+            <div class="inline-block space-x-6">
+                <cancel-button @click="cancel"/>
+                <save-button/>
             </div>
         </form>
     </div>
-
 </template>
 <script setup lang="ts">
+
+// Imports
 import CustomerService from '@/services/CustomerService';
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import CancelButton from "@/components/Button/CancelButton.vue";
+import SaveButton from "@/components/Button/SaveButton.vue";
 
 // Variables
 const message = ref('');
 const showMessage = ref(false);
+const insertCustReturn = ref<insertCustInterface>();
+const labelClass = ref('absolute left-1 -top-6 dark:text-gray-100 text-gray-800 text-sm');
+const textError = ref('absolute left-1 -top-6 dark:text-red-400 text-red-600 text-sm');
+const emailInput = ref<HTMLInputElement>();
+const labelEmailInput = ref<HTMLInputElement>();
+
+onMounted(() => {
+    emailInput.value = <HTMLInputElement>document.getElementById("email");
+    labelEmailInput.value = <HTMLInputElement>document.getElementById("label-email")
+});
 
 // Functions
-// Key function to update one attribute value inside the JSON object
+
+// Determine input email field padding
+const emailPadding = (index:string) => {
+    if (index === 'email') {
+            return 'pl-10'
+        } else return 'pl-2'
+};
+
+// Update one attribute value with a given path inside the JSON object
 const setNestedObject = (nestedObj:any, pathArr:Array<string>, input:any) => {
     var len = pathArr.length;
     for(var i = 0; i < len-1; i++) {
@@ -61,15 +86,49 @@ const updateBody = (body:any, index:string, level:string) => {
 const createCust = async () => {
     let body = {};
     let metas = props.customerMeta;
+    var email = emailInput?.value;
+    console.log(email?.value);
     if (metas) {
         for (let meta in metas) {
             updateBody(body, meta, metas[meta].levelup);
         }
     };
-    console.log('body v2 : '+body);
-    await CustomerService.insertCustomer(body);
-    console.log('customer created');
-    created();
+    // Test check Email
+    if (email?.value === 'toto@toto') {
+        showMessage.value = true;
+        message.value = 'Email Invalid!';
+        email.focus();
+        labelEmailInput.value?.setAttribute('class', textError.value);
+    } else {
+        insertCustReturn.value = await CustomerService.insertCustomer(body);
+        //console.log('Return after creation : ',insertCustReturn);
+        if (insertCustReturn.value.status === 201) {
+            created();
+        } else {
+            showMessage.value = true;
+            message.value = 'Customer creation issue :(';
+        }
+    }
+};
+/*
+const focusChange = (index: string) => {
+    console.log('focus on ',index);
+    if (index !== 'email') {
+        showMessage.value = false
+        labelEmailInput.value?.setAttribute('class', labelClass.value);
+    }
+}; */
+
+const focusChange = () => {
+    showMessage.value = false
+    labelEmailInput.value?.setAttribute('class', labelClass.value);
+};
+
+// Determine the input Type for a meta
+const metaType = (index: string) => {
+    if (index === 'email') {
+        return 'email'
+    } else return ''
 };
 
 // Interfaces
@@ -79,6 +138,18 @@ interface CustomerInterface {
 interface Props {
     customerMeta: CustomerInterface|undefined
 };
+interface insertCustInterface {
+    data: string,
+    status: number,
+    statusText: string
+};
+
+// Computed variables
+
+const emailValid = computed(() => {
+        // TODO
+    }
+);
 
 // Props & Emit
 const props = defineProps<Props>();

@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
-// import AboutView from '@/views/AboutView.vue'
-// import CustomerView from '@/views/Customer.vue'
 
 // Lazy load components
 const CustomerView = () => import ('@/views/CustomerView.vue');
@@ -13,22 +11,22 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'Home',
       component: HomeView
     },
     {
       path: '/customer',
-      name: 'customer',
+      name: 'Customer',
       component: CustomerView
     },
     {
       path: '/data',
-      name: 'data',
+      name: 'Data Explorer',
       component: DataExplorerView
     },
     {
       path: '/about',
-      name: 'about',
+      name: 'Contact',
       component: AboutView
     }
   ]

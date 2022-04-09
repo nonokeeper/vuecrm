@@ -1,7 +1,8 @@
 import axios from 'axios'
 
-const url = 'http://localhost:5000/api/customers'
-const urlMeta = 'http://localhost:5000/api/customers/meta'
+const baseURL = import.meta.env.VITE_BASEURL_LOCAL
+const url = baseURL + 'api/customers'
+const urlMeta = baseURL + 'api/customers/meta'
 
 class CustomerService {
   // Get Customers Meta
