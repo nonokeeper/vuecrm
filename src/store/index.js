@@ -4,7 +4,8 @@ import router from '../router'
 import axios from 'axios'
 
 const instance = axios.create({
-    baseURL: 'http://localhost:5000/api/'
+    baseURL: 'https://dream-crm.herokuapp.com/api/'
+    //baseURL: 'http://localhost:5000/api/'
 })
 
 let status = localStorage.getItem('status')
