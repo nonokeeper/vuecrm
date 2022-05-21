@@ -39,6 +39,16 @@
                             <td class="border-b border-slate-100 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">Button</td>
                             <td class="border-b border-slate-100 dark:border-slate-700 p-4 pr-8 text-slate-500 dark:text-slate-400"><RefreshButton/></td>
                         </tr>
+                        <tr>
+                            <td class="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">AddButton</td>
+                            <td class="border-b border-slate-100 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">Button</td>
+                            <td class="border-b border-slate-100 dark:border-slate-700 p-4 pr-8 text-slate-500 dark:text-slate-400"><AddButton/></td>
+                        </tr>
+                        <tr>
+                            <td class="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">RemoveButton</td>
+                            <td class="border-b border-slate-100 dark:border-slate-700 p-4 text-slate-500 dark:text-slate-400">Button</td>
+                            <td class="border-b border-slate-100 dark:border-slate-700 p-4 pr-8 text-slate-500 dark:text-slate-400"><RemoveButton/></td>
+                        </tr>
                     </tbody>
                     </table>
                 </div>
@@ -54,7 +64,9 @@ import CreateButton from "../components/Button/CreateButton.vue";
 import CancelButton from "../components/Button/CancelButton.vue";
 import DeleteButton from "../components/Button/DeleteButton.vue";
 import SaveButton from "../components/Button/SaveButton.vue";
-import RefreshButton from '@/components/Button/RefreshButton.vue'
+import RefreshButton from '@/components/Button/RefreshButton.vue';
+import AddButton from "../components/Button/AddButton.vue";
+import RemoveButton from "../components/Button/RemoveButton.vue";
 
 console.log('DataExplorerView.vue');
 </script>

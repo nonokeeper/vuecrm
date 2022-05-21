@@ -1,34 +1,34 @@
 <template>
 <div class="mt-2 mb-4" :class="showConfirmDialog? 'blur-sm' : ''">
-    <table id="customers">
-    <thead>
-        <tr class="text-left text-white">
-        <th class="px-3 py-2">
-            &nbsp;
-        </th>
-        <th class="text-yellow-800 dark:text-yellow-100 px-3 py-2" v-for="(meta, index) in props.customersMeta" v-bind:key="index">
-            <span class="whitespace-nowrap">{{ meta?.label }}</span>
-        </th>
-        <th colspan=2 class="px-3 py-2">
-        </th>
-        </tr>
-    </thead>
-    <tbody v-if="props.customers">
-        <tr v-for="cust in props.customers" v-bind:key="cust._id">
-            <td class="px-3 py-2">
-                <input class="accent-yellow-600" type="checkbox" v-bind:value='cust._id'>
-            </td>
-            <td class="px-3 py-2" v-for="(meta, index) in props.customersMeta" :set="custData = getDataFrom(cust, meta.levelup, index)" v-bind:key="index">
-                {{ custData }}
-            </td>
-            <td class="px-3 py-2">
-                <i @click="edit(cust)" class="fas fa-edit text-yellow-600 cursor-pointer" title="edit"></i>
-            </td>
-            <td class="px-3 py-2">
-                <i @click="deletion(cust._id)" class="fas fa-trash text-red-600 cursor-pointer" title="delete"></i>
-            </td>
-        </tr>
-    </tbody>
+    <table id="customers" v-if="props.customers">
+        <thead>
+            <tr class="text-left text-white">
+                <th class="px-3 py-2">
+                    
+                </th>
+                <th class="text-yellow-800 dark:text-yellow-100 px-3 py-2" v-for="(meta, index) in props.customerMeta" v-bind:key="index">
+                    <span class="whitespace-nowrap">{{ meta?.label }}</span>
+                </th>
+                <th colspan=2 class="px-3 py-2"> <!-- 2 operations -->
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr v-for="cust in props.customers" v-bind:key="cust._id">
+                <td class="px-3 py-2">
+                    <input class="accent-yellow-600" type="checkbox" v-bind:value='cust._id'>
+                </td>
+                <td class="px-3 py-2" v-for="(meta, index) in props.customerMeta" :set="custData = getDataFrom(cust, meta.levelup, index)" v-bind:key="index">
+                    {{ custData }}
+                </td>
+                <td class="px-3 py-2">
+                    <i @click="edit(cust)" class="fas fa-edit text-yellow-400 cursor-pointer" title="edit"></i>
+                </td>
+                <td class="px-3 py-2">
+                    <i @click="deletion(cust._id)" class="fas fa-trash text-red-600 cursor-pointer" title="delete"></i>
+                </td>
+            </tr>
+        </tbody>
     </table>
 </div>
 <div v-if="showConfirmDialog"
@@ -36,7 +36,7 @@
 	id="deleteCustomerModal">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div v-if="noDeletion" class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Are you sure to delete this customer?</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Are you sure to delete this customer <br/>(id = {{ customerToDelete }})?</h3>
             <div class="mt-2 px-7 py-3">
                 <p class="text-sm text-gray-500">
                     All data linked to it will also be deleted!
@@ -62,13 +62,16 @@
 </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 // Variables
 let custData = '';
+let searchIndex = ref('');
 const showConfirmDialog = ref(false);
 const noDeletion = ref(true);
 const customerToDelete = ref('');
+let customersArray = [{}];
+const searchSubmit = ref(false);
 
 // Functions
 // Key function which gets the attribute value based on its name and its hierarchy
@@ -100,7 +103,10 @@ interface CustomerInterface {
 };
 interface Props {
     customers: CustomerInterface[]|undefined
-    customersMeta: CustomerInterface|undefined
+    customerMeta: CustomerMeta|undefined
+};
+interface CustomerMeta {
+    [key: string]: any
 };
 
 const emit = defineEmits<{
@@ -130,7 +136,6 @@ const confirmDelete = () => {
 
 const cancelDelete = () => {
     showConfirmDialog.value = false;
-}
-
+};
 
 </script>

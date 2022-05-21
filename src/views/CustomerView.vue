@@ -5,7 +5,7 @@
         <span class="absolute inset-y-0 left-3 flex items-center pl-2">
           <svg fill="none" stroke="#BBBBBB" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-6 h-6"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </span>
-        <input v-model="search" placeholder="Search" type="text" class="border border-gray-300 ml-4 px-8 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
+        <input v-model="search" placeholder="Global search" type="text" class="border border-gray-300 ml-4 px-8 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
         <span @click="search=''" class="absolute inset-y-0 left-60 flex items-center">
           <i class="text-gray-400 dark:text-gray-300 fa-regular fa-circle-xmark"></i>
         </span>
@@ -14,11 +14,17 @@
         {{ nbCustomers }} Customers
         <refresh-button :text="refreshText" @click="refresh"/>
         <create-button text="New customer" @click="openCreate"/>
+        <add-button v-if="!filter" text="Add Filter" @click="addFilter"/>
+        <remove-button v-if="filter" text="Remove Filter" @click="removeFilter"/>
       </div>
+      <div v-if="filter" class="">
+        <customer-filter @reset-filter="resetFilter" @filter-created="applyFilter" :customer-meta="customersMeta"/>
+      </div>
+
     </div>
-    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="filteredCustomers" :customers-meta="customersMeta"/>
+    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="filteredCustomers" :customer-meta="customersMeta"/>
     <customer-edit v-if="edit && customer" @cancelEdit="cancelEdit" :customer="customer" :customer-meta="customersMeta"/>
-    <customer-create v-if="create" @cancelCreate="cancelCreate" @created="created" :customer-meta="customersMeta"></customer-create>
+    <customer-create v-if="create" @cancelCreate="cancelCreate" @created="created" :customer-meta="customersMeta"/>
   </main>
 
 </template>
@@ -32,8 +38,13 @@ import CustomerEdit from '@/components/Customer/CustomerEdit.vue';
 import CustomerCreate from '@/components/Customer/CustomerCreate.vue';
 import RefreshButton from '@/components/Button/RefreshButton.vue';
 import CreateButton from '@/components/Button/CreateButton.vue';
+import CustomerFilter from '@/components/Customer/CustomerFilter.vue';
+import AddButton from '../components/Button/AddButton.vue';
+import RemoveButton from '../components/Button/RemoveButton.vue';
 
 const loaded = ref(false);
+const filter = ref(false);
+const filters = ref<FilterInterface>();
 const refreshText = ref('Refresh');
 const edit = ref(false);
 const create = ref(false);
@@ -42,18 +53,10 @@ const search = ref('');
 const customer = ref<CustomerInterface>();
 const customers = ref<CustomerInterface[]>([{"default":"x"}]);
 const customersMeta = ref<CustomerInterface>([{"default":"x"}]);
-let nbCustomers = ref(0);
+let customersArray = Array<CustomerInterface>([{"default":"x"}]);
 
 const isCheckAll = ref(false);
-const createErrorFlag = ref(false);
-const updateErrorFlag = ref(false);
-const showModal = ref(false);
-const showMessage = ref(false);
-const message = ref('');
-const createError = ref('');
-const updateError = ref('');
 const checkedItems = ref([]);
-let customersArray = Array<CustomerInterface>([{"default":"x"}]);
 
 console.log('CustomerView.vue');
 
@@ -65,8 +68,9 @@ onBeforeMount( async () => {
   customers.value = await CustomerService.getCustomers();
   if (customers.value) {
     customersArray = customers.value;
-    nbCustomers.value = customers.value.length
   }
+  search.value = 'X'; // only to force calculation of filteredCustomers
+  search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
   refreshText.value = 'Refresh';
 })
@@ -105,6 +109,30 @@ const deletion = async (id:string) => {
   refresh();
 };
 
+// Interfaces
+interface FilterInterface {
+  meta:string,
+  operator:string,
+  val:string
+};
+
+const applyFilter = (a:string, b:string, c:string) => {
+  filters.value = {
+    meta : a,
+    operator : b,
+    val : c
+  };
+};
+
+const resetFilter = () => {
+  filters.value = {
+    meta : '',
+    operator : 'equals',
+    val : ''
+  };
+};
+
+
 const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:CustomerInterface) => {
   const levelup:string = meta?.levelup
   var tab = levelup?.split('.')
@@ -125,7 +153,6 @@ const refresh = async () => {
   customersMeta.value = await CustomerService.getCustomersMeta();
   customers.value = await CustomerService.getCustomers();
   customersArray = customers.value;
-  nbCustomers.value = customers.value.length
   search.value = 'X'; // only to reload filteredCustomers
   search.value = ''; // only to reload filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
@@ -137,12 +164,47 @@ const openCreate = () => {
   list.value = false;
 };
 
+const addFilter = () => {
+  filter.value = true;
+};
+
+const removeFilter = () => {
+  filter.value = false;
+  filters.value = {
+    meta : '',
+    operator : '',
+    val : ''
+  };
+};
+
 const testCustomer = (cust: CustomerInterface) => {
-  if (search.value === '') return true
-  let test = false
+  var meta = filters?.value?.meta;
+  var operator = filters?.value?.operator;
+  var val = filters?.value?.val;
+
+//console.log('operator : ',filters?.value?.operator);
+
+  let test = false;
+  if (search.value === '') test=true;
   for (const index in customersMeta.value) {
-    let custData = getCustomerDataFromMeta(customersMeta.value[index], index, cust)
-    if (custData && custData.toLowerCase().includes(search.value.toLowerCase())) test=true
+    if (search.value !== '') {
+      let custData = getCustomerDataFromMeta(customersMeta.value[index], index, cust);
+      if (custData && custData.toLowerCase().includes(search.value.toLowerCase()))
+        test=true;
+    }
+    if (meta && operator && val) {
+      let custFilterData = getCustomerDataFromMeta(customersMeta.value[meta], meta, cust);
+      switch (operator) {
+        case 'equals':
+          (custFilterData && custFilterData == val) ? test=true : test=false;
+          break;
+        case 'contains':
+          (custFilterData && custFilterData.toLowerCase().includes(val.toLowerCase())) ? test=true : test=false;
+          break;
+        default:
+          break;
+      }
+    }
   }
   return test
 };
@@ -150,5 +212,7 @@ const testCustomer = (cust: CustomerInterface) => {
 // Computed variables
 
 const filteredCustomers = computed(() => customersArray.filter((cust: CustomerInterface) => testCustomer(cust)));
+
+const nbCustomers = computed(() => filteredCustomers.value.length);
 
 </script>
