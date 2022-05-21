@@ -1,8 +1,11 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_BASEURL_LOCAL
-const url = baseURL + 'api/customers'
-const urlMeta = baseURL + 'api/customers/meta'
+const baseURL = import.meta.env.VITE_BASEURL
+
+const url = baseURL + 'customers'
+const urlMeta = baseURL + 'customers/meta'
+
+console.log('baseURL : '+baseURL);
 
 class CustomerService {
   // Get Customers Meta

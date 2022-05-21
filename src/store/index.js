@@ -1,11 +1,10 @@
 import { createStore } from 'vuex'
-// import customersModule from "./modules/customersMeta"
+
 import router from '../router'
 import axios from 'axios'
 
 const instance = axios.create({
-    baseURL: 'https://dream-crm.herokuapp.com/api/'
-    //baseURL: 'http://localhost:5000/api/'
+    baseURL: import.meta.env.VITE_BASEURL
 })
 
 let status = localStorage.getItem('status')
