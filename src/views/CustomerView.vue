@@ -11,18 +11,36 @@
         </span>
       </div>
       <div class="inline-block space-x-6">
-        {{ nbCustomers }} Customers
-        <refresh-button :text="refreshText" @click="refresh"/>
+        <span v-if="loaded">{{ nbTotalCustomers }} Customers</span>
+        <span v-else>? Customers</span>
+        <refresh-button :text="refreshText" @click="refresh(pageNumber)"/>
         <create-button text="New customer" @click="openCreate"/>
         <add-button v-if="!filter" text="Add Filter" @click="addFilter"/>
         <remove-button v-if="filter" text="Remove Filter" @click="removeFilter"/>
       </div>
       <div v-if="filter" class="">
-        <customer-filter @reset-filter="resetFilter" @filter-created="applyFilter" :customer-meta="customersMeta"/>
+        <customer-filter @reset-filter="resetFilter" @filter-created="filterCustomers" :customer-meta="customersMeta"/>
       </div>
-
     </div>
-    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="filteredCustomers" :customer-meta="customersMeta"/>
+    <div v-if="loaded" class="grid grid-cols-4 gap-4">
+      <div class="ml-4 col-span-2">Showing {{ beginCursor }} to {{ endCursor }} of {{ nbTotalCustomers }} results</div>
+      <div><label for="size"># max results </label>
+        <select id="size" class="dark:text-black" v-model="size" @change="refresh(pageNumber)">
+          <option selected value="20">20</option>
+          <option selected value="50">50</option>
+          <option selected value="100">100</option>
+        </select>
+      </div>
+      <div class="text-right mr-4">
+        <i class="cursor-pointer fa-solid fa-backward-step" @click="first">&nbsp;</i>&nbsp;
+        <i class="cursor-pointer fa-solid fa-angle-left" @click="previous">&nbsp;</i>Page 
+        <input class="dark:text-black w-16" type="number" v-model="pageNumber" @change="refresh(pageNumber)"/>
+         / {{ pageTotal }}&nbsp;
+        <i class="cursor-pointer fa-solid fa-angle-right" @click="next">&nbsp;</i>&nbsp;
+        <i class="cursor-pointer fa-solid fa-forward-step" @click="last">&nbsp;</i>
+      </div>
+    </div>
+    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="customersFiltered!.data" :customer-meta="customersMeta"/>
     <customer-edit v-if="edit && customer" @cancelEdit="cancelEdit" :customer="customer" :customer-meta="customersMeta"/>
     <customer-create v-if="create" @cancelCreate="cancelCreate" @created="created" :customer-meta="customersMeta"/>
   </main>
@@ -45,15 +63,22 @@ import RemoveButton from '../components/Button/RemoveButton.vue';
 const loaded = ref(false);
 const filter = ref(false);
 const filters = ref<FilterInterface>();
+const filterCustomer = ref('');
 const refreshText = ref('Refresh');
 const edit = ref(false);
 const create = ref(false);
 const list = ref(true);
 const search = ref('');
 const customer = ref<CustomerInterface>();
-const customers = ref<CustomerInterface[]>([{"default":"x"}]);
-const customersMeta = ref<CustomerInterface>([{"default":"x"}]);
-let customersArray = Array<CustomerInterface>([{"default":"x"}]);
+// const customers = ref<CustomerArrayInterface>();
+const customersFiltered = ref<CustomerArrayInterface>();
+const customersMeta = ref<CustomerInterface>();
+let customersArray = Array<CustomerInterface>();
+const nbTotalCustomers = ref(0);
+const pageNumber = ref(1);
+const size = ref(20);
+
+
 
 const isCheckAll = ref(false);
 const checkedItems = ref([]);
@@ -65,19 +90,23 @@ onBeforeMount( async () => {
   refreshText.value = 'Loading...';
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
-  customers.value = await CustomerService.getCustomers();
-  if (customers.value) {
-    customersArray = customers.value;
-  }
+  customersFiltered.value = await CustomerService.getCustomers(1,size.value);
+  console.log('customersFiltered : ',customersFiltered.value);
+  nbTotalCustomers.value = customersFiltered.value!.nb;
   search.value = 'X'; // only to force calculation of filteredCustomers
   search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
   refreshText.value = 'Refresh';
 })
 
-// Interfaces
 interface CustomerInterface {
     [key: string]: any
+};
+
+// Interfaces
+interface CustomerArrayInterface {
+    "data": Array<CustomerInterface>,
+    "nb": number
 }
 
 // Functions
@@ -99,14 +128,14 @@ const cancelCreate = () => {
 };
 
 const created = () => {
-  refresh();
+  refresh(1);
   create.value = false;
   list.value = true;
 };
 
 const deletion = async (id:string) => {
   await CustomerService.deleteCustomer(id);
-  refresh();
+  refresh(1);
 };
 
 // Interfaces
@@ -124,14 +153,33 @@ const applyFilter = (a:string, b:string, c:string) => {
   };
 };
 
+const filterCustomers = async (a:string, b:string, c:string) => {
+  refreshText.value = 'Loading...';
+  loaded.value = false;
+  if (b == 'equals') {
+    filterCustomer.value = '{"'+a+'": "'+c+'"}';
+  };
+  //console.log('CustomerView function filterCustomers - filterCustomer : ', filterCustomer.value);
+  customersFiltered.value = await CustomerService.getCustomers(1, size.value, filterCustomer.value);
+  //console.log('function filterCustomers - #customersFiltered : ', customersFiltered.value!.nb);
+
+  nbTotalCustomers.value = customersFiltered.value!.nb;
+  search.value = 'X'; // only to force calculation of filteredCustomers
+  search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
+  loaded.value = true;
+  refreshText.value = 'Refresh';
+
+}
+
 const resetFilter = () => {
   filters.value = {
     meta : '',
     operator : 'equals',
     val : ''
   };
+  filterCustomer.value = '';
+  refresh(1);
 };
-
 
 const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:CustomerInterface) => {
   const levelup:string = meta?.levelup
@@ -147,17 +195,45 @@ const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:Custo
   return '' // default empty value if the last level does not exist
 }
 
-const refresh = async () => {
+const refresh = async (page: number, filter?: {}) => {
   refreshText.value = 'Loading...'
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
-  customers.value = await CustomerService.getCustomers();
-  customersArray = customers.value;
+  customersFiltered.value = await CustomerService.getCustomers(page, size.value, filter);
+  nbTotalCustomers.value = customersFiltered.value!.nb;
   search.value = 'X'; // only to reload filteredCustomers
   search.value = ''; // only to reload filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
   refreshText.value = 'Refresh';
 };
+
+const next = () => {
+  if (pageNumber.value < pageTotal.value) {
+    pageNumber.value ++;
+    refresh(pageNumber.value, filterCustomer.value);
+  }
+}
+
+const last = () => {
+  if (pageNumber.value < pageTotal.value) {
+    pageNumber.value = pageTotal.value;
+    refresh(pageNumber.value, filterCustomer.value);
+  }
+}
+
+const previous = () => {
+  if (pageNumber.value > 1) {
+    pageNumber.value --;
+    refresh(pageNumber.value, filterCustomer.value);
+  }
+}
+
+const first = () => {
+  if (pageNumber.value > 1) {
+    pageNumber.value = 1;
+    refresh(1, filterCustomer.value);
+  }
+}
 
 const openCreate = () => {
   create.value = true;
@@ -175,12 +251,15 @@ const removeFilter = () => {
     operator : '',
     val : ''
   };
+  filterCustomer.value = '';
+  refresh(1);
 };
 
 const testCustomer = (cust: CustomerInterface) => {
   var meta = filters?.value?.meta;
   var operator = filters?.value?.operator;
   var val = filters?.value?.val;
+  var custData = '';
 
 //console.log('operator : ',filters?.value?.operator);
 
@@ -188,9 +267,11 @@ const testCustomer = (cust: CustomerInterface) => {
   if (search.value === '') test=true;
   for (const index in customersMeta.value) {
     if (search.value !== '') {
-      let custData = getCustomerDataFromMeta(customersMeta.value[index], index, cust);
-      if (custData && custData.toLowerCase().includes(search.value.toLowerCase()))
-        test=true;
+      custData = getCustomerDataFromMeta(customersMeta.value[index], index, cust);
+      if (custData) {
+        let data = custData.toString().toLowerCase();
+        if (data.includes(search.value.toLowerCase())) test=true;
+      }
     }
     if (meta && operator && val) {
       let custFilterData = getCustomerDataFromMeta(customersMeta.value[meta], meta, cust);
@@ -211,8 +292,14 @@ const testCustomer = (cust: CustomerInterface) => {
 
 // Computed variables
 
-const filteredCustomers = computed(() => customersArray.filter((cust: CustomerInterface) => testCustomer(cust)));
+// const filteredCustomers = computed(() => customersArray.filter((cust: CustomerInterface) => testCustomer(cust)));
 
-const nbCustomers = computed(() => filteredCustomers.value.length);
+const pageTotal = computed(() => ~~(nbTotalCustomers.value / size.value) + 1);
+
+const beginCursor = computed(() => size.value * (pageNumber.value - 1) + 1);
+
+const endCursor = computed(() => (size.value * pageNumber.value < nbTotalCustomers.value)? size.value * pageNumber.value : nbTotalCustomers.value);
+
+// const nbCustomers = computed(() => filteredCustomers.value.length);
 
 </script>

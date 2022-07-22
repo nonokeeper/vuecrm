@@ -5,6 +5,7 @@ import HomeView from '@/views/HomeView.vue';
 const CustomerView = () => import ('@/views/CustomerView.vue');
 const AboutView = () => import ('@/views/AboutView.vue');
 const DataExplorerView = () => import ('@/views/DataExplorerView.vue');
+const CollectionView = () => import ('@/views/CollectionView.vue');
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +29,11 @@ const router = createRouter({
       path: '/about',
       name: 'Contact',
       component: AboutView
+    },
+    {
+      path: '/collection',
+      name: 'Collection',
+      component: CollectionView
     }
   ]
 })

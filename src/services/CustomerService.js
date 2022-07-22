@@ -42,10 +42,11 @@ class CustomerService {
   }
 
   // Get Customers
-  static async getCustomers () {
+  static async getCustomers (pageNumber, size, filter) {
     try {
-      const res = await axios.get(url)
-      return res.data
+      //if (filter) console.log('CustomerService getCustomers filter : ' + filter.NOM);
+      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}&filter=${filter}`);
+      return res.data;
     } catch (err) {
       console.log('CustomerService getCustomers error : ' + err)
       return (err)
