@@ -41,11 +41,27 @@ class CustomerService {
     }
   }
 
-  // Get Customers
-  static async getCustomers (pageNumber, size, filter) {
+  /* Get Customers BEFORE
+  static async getCustomers (pageNumber, size, attribute, operator, value) {
     try {
       //if (filter) console.log('CustomerService getCustomers filter : ' + filter.NOM);
-      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}&filter=${filter}`);
+      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}&attribute=${attribute}&operator=${operator}&value=${value}`);
+      return res.data;
+    } catch (err) {
+      console.log('CustomerService getCustomers error : ' + err)
+      return (err)
+    }
+  } */
+
+  // Get Customers
+  static async getCustomers (pageNumber, size, filters) {
+    if (filters) console.log('CustomerService filters meta : ' + filters.meta)
+    try {
+      //if (filter) console.log('CustomerService getCustomers filter : ' + filter.NOM);
+      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}`
+      , {
+        params: filters,
+      });
       return res.data;
     } catch (err) {
       console.log('CustomerService getCustomers error : ' + err)

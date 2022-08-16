@@ -4,7 +4,7 @@
         <div class="my-2">
          <select class="dark:bg-cyan-600 mr-2" v-model="filter">
             <option class="" value="">-- Select One --</option>
-            <option class="dark:bg-cyan-600" v-for="(key, index) in props.customerMeta" :value="index">{{ key.label }}</option>
+            <option class="dark:bg-cyan-600" v-for="(key, index) in props.customerMeta" :key="index" :value="index">{{ key.label }}</option>
          </select>
          <select class="dark:bg-cyan-600 mr-2" v-model="operator">
             <option selected value="equals" class="dark:bg-cyan-600">Equals</option>
@@ -20,8 +20,8 @@
 
 // Imports
 import {ref} from 'vue';
-import FilterButton from '../Button/FilterButton.vue';
-import CancelButton from '../Button/CancelButton.vue';
+import FilterButton from '@/components/Button/FilterButton.vue';
+import CancelButton from '@/components/Button/CancelButton.vue';
 
 // Variables
 const searchFilter = ref('');
@@ -60,7 +60,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
-    (e: 'filterCreated', a:string, b:string, c:string) : void,
+    (e: 'filterCreated', filter:string, operator:string, value:string) : void,
     (e: 'resetFilter') : void
 }>();
 

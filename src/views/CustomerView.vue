@@ -23,8 +23,9 @@
       </div>
     </div>
     <div v-if="loaded" class="grid grid-cols-4 gap-4">
-      <div class="ml-4 col-span-2">Showing {{ beginCursor }} to {{ endCursor }} of {{ nbTotalCustomers }} results</div>
-      <div><label for="size"># max results </label>
+      <div class="ml-4 col-span-2">Showing <span v-if="nbTotalCustomers > 0">{{ beginCursor }} to {{ endCursor }} of </span>{{ nbTotalCustomers }} results</div>
+      <div>
+        <label for="size"># max results </label>
         <select id="size" class="dark:text-black" v-model="size" @change="refresh(pageNumber)">
           <option selected value="20">20</option>
           <option selected value="50">50</option>
@@ -40,7 +41,7 @@
         <i class="cursor-pointer fa-solid fa-forward-step" @click="last">&nbsp;</i>
       </div>
     </div>
-    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="customersFiltered!.data" :customer-meta="customersMeta"/>
+    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="customersFiltered?.data" :customer-meta="customersMeta"/>
     <customer-edit v-if="edit && customer" @cancelEdit="cancelEdit" :customer="customer" :customer-meta="customersMeta"/>
     <customer-create v-if="create" @cancelCreate="cancelCreate" @created="created" :customer-meta="customersMeta"/>
   </main>
@@ -60,9 +61,11 @@ import CustomerFilter from '@/components/Customer/CustomerFilter.vue';
 import AddButton from '../components/Button/AddButton.vue';
 import RemoveButton from '../components/Button/RemoveButton.vue';
 
+const FIRSTPAGE = 1;
+const NBMAX = 20;
 const loaded = ref(false);
 const filter = ref(false);
-const filters = ref<FilterInterface>();
+let filters = {meta: '', operator: '', val: ''};
 const filterCustomer = ref('');
 const refreshText = ref('Refresh');
 const edit = ref(false);
@@ -75,9 +78,8 @@ const customersFiltered = ref<CustomerArrayInterface>();
 const customersMeta = ref<CustomerInterface>();
 let customersArray = Array<CustomerInterface>();
 const nbTotalCustomers = ref(0);
-const pageNumber = ref(1);
-const size = ref(20);
-
+const pageNumber = ref(FIRSTPAGE);
+const size = ref(NBMAX);
 
 
 const isCheckAll = ref(false);
@@ -90,7 +92,7 @@ onBeforeMount( async () => {
   refreshText.value = 'Loading...';
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
-  customersFiltered.value = await CustomerService.getCustomers(1,size.value);
+  customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE,size.value);
   console.log('customersFiltered : ',customersFiltered.value);
   nbTotalCustomers.value = customersFiltered.value!.nb;
   search.value = 'X'; // only to force calculation of filteredCustomers
@@ -110,9 +112,9 @@ interface CustomerArrayInterface {
 }
 
 // Functions
-const getCustomer = (cust: CustomerInterface|undefined) => {
+const getCustomer = (customerInterface: CustomerInterface|undefined) => {
   //console.log('CustomerView -- getCustomer, cust : ', cust);
-  customer.value = cust;
+  customer.value = customerInterface;
   list.value = false;
   edit.value = true;
 };
@@ -128,14 +130,14 @@ const cancelCreate = () => {
 };
 
 const created = () => {
-  refresh(1);
+  refresh(FIRSTPAGE);
   create.value = false;
   list.value = true;
 };
 
 const deletion = async (id:string) => {
   await CustomerService.deleteCustomer(id);
-  refresh(1);
+  refresh(FIRSTPAGE);
 };
 
 // Interfaces
@@ -145,6 +147,7 @@ interface FilterInterface {
   val:string
 };
 
+/*
 const applyFilter = (a:string, b:string, c:string) => {
   filters.value = {
     meta : a,
@@ -152,16 +155,17 @@ const applyFilter = (a:string, b:string, c:string) => {
     val : c
   };
 };
-
-const filterCustomers = async (a:string, b:string, c:string) => {
+*/
+const filterCustomers = async (attribute:string, operator:string, value:string) => {
   refreshText.value = 'Loading...';
   loaded.value = false;
-  if (b == 'equals') {
-    filterCustomer.value = '{"'+a+'": "'+c+'"}';
-  };
-  //console.log('CustomerView function filterCustomers - filterCustomer : ', filterCustomer.value);
-  customersFiltered.value = await CustomerService.getCustomers(1, size.value, filterCustomer.value);
-  //console.log('function filterCustomers - #customersFiltered : ', customersFiltered.value!.nb);
+  pageNumber.value = FIRSTPAGE;
+  filters = {meta: attribute, operator: operator, val: value}
+
+  console.log('function filterCustomers - filters : ', filters);
+
+  customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE, size.value, filters);
+  console.log('function filterCustomers - #customersFiltered : ', customersFiltered.value!.nb);
 
   nbTotalCustomers.value = customersFiltered.value!.nb;
   search.value = 'X'; // only to force calculation of filteredCustomers
@@ -172,15 +176,16 @@ const filterCustomers = async (a:string, b:string, c:string) => {
 }
 
 const resetFilter = () => {
-  filters.value = {
+  filters = {
     meta : '',
-    operator : 'equals',
+    operator : '',
     val : ''
   };
-  filterCustomer.value = '';
-  refresh(1);
+  //filterCustomer.value = '';
+  refresh(FIRSTPAGE);
 };
 
+/*
 const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:CustomerInterface) => {
   const levelup:string = meta?.levelup
   var tab = levelup?.split('.')
@@ -194,12 +199,13 @@ const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:Custo
   if (cust) return cust[index]
   return '' // default empty value if the last level does not exist
 }
+*/
 
-const refresh = async (page: number, filter?: {}) => {
+const refresh = async (page: number) => {
   refreshText.value = 'Loading...'
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
-  customersFiltered.value = await CustomerService.getCustomers(page, size.value, filter);
+  customersFiltered.value = await CustomerService.getCustomers(page, size.value, filters);
   nbTotalCustomers.value = customersFiltered.value!.nb;
   search.value = 'X'; // only to reload filteredCustomers
   search.value = ''; // only to reload filteredCustomers (value changed here from 'X' to '')
@@ -210,28 +216,28 @@ const refresh = async (page: number, filter?: {}) => {
 const next = () => {
   if (pageNumber.value < pageTotal.value) {
     pageNumber.value ++;
-    refresh(pageNumber.value, filterCustomer.value);
+    refresh(pageNumber.value);
   }
 }
 
 const last = () => {
   if (pageNumber.value < pageTotal.value) {
     pageNumber.value = pageTotal.value;
-    refresh(pageNumber.value, filterCustomer.value);
+    refresh(pageNumber.value);
   }
 }
 
 const previous = () => {
   if (pageNumber.value > 1) {
     pageNumber.value --;
-    refresh(pageNumber.value, filterCustomer.value);
+    refresh(pageNumber.value);
   }
 }
 
 const first = () => {
   if (pageNumber.value > 1) {
     pageNumber.value = 1;
-    refresh(1, filterCustomer.value);
+    refresh(FIRSTPAGE);
   }
 }
 
@@ -246,15 +252,15 @@ const addFilter = () => {
 
 const removeFilter = () => {
   filter.value = false;
-  filters.value = {
+  filters = {
     meta : '',
     operator : '',
     val : ''
   };
-  filterCustomer.value = '';
-  refresh(1);
+  refresh(FIRSTPAGE);
 };
 
+/*
 const testCustomer = (cust: CustomerInterface) => {
   var meta = filters?.value?.meta;
   var operator = filters?.value?.operator;
@@ -289,6 +295,7 @@ const testCustomer = (cust: CustomerInterface) => {
   }
   return test
 };
+*/
 
 // Computed variables
 
