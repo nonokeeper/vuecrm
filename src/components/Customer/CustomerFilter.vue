@@ -31,7 +31,6 @@ const operator = ref('equals');
 // Functions
 const applyFilter = () => {
     emit('filterCreated', filter.value, operator.value, searchFilter.value);
-    //console.log('CustomerFilter / filter meta : '+filter.value);
 };
 
 const resetFilter = () => {
@@ -41,11 +40,6 @@ const resetFilter = () => {
     emit('resetFilter');
 };
 
-/*
-const fullMeta = (level:string , meta:string|number) => {
-    return (level !== '' && level !== undefined) ? level+'.'+meta : meta;
-};
-*/
 // Interfaces
 interface CustomerInterface {
     [key: string]: any

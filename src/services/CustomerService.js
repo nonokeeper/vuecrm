@@ -41,30 +41,27 @@ class CustomerService {
     }
   }
 
-  /* Get Customers BEFORE
-  static async getCustomers (pageNumber, size, attribute, operator, value) {
-    try {
-      //if (filter) console.log('CustomerService getCustomers filter : ' + filter.NOM);
-      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}&attribute=${attribute}&operator=${operator}&value=${value}`);
-      return res.data;
-    } catch (err) {
-      console.log('CustomerService getCustomers error : ' + err)
-      return (err)
-    }
-  } */
-
   // Get Customers
   static async getCustomers (pageNumber, size, filters) {
-    if (filters) console.log('CustomerService filters meta : ' + filters.meta)
     try {
-      //if (filter) console.log('CustomerService getCustomers filter : ' + filter.NOM);
-      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}`
-      , {
+      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}`, {
         params: filters,
       });
       return res.data;
     } catch (err) {
       console.log('CustomerService getCustomers error : ' + err)
+      return (err)
+    }
+  }
+
+  // Search Customers by filters
+  static async searchCustomers (pageNumber, size, filters) {
+    try {
+      var body = {pageNumber : pageNumber, size: size, filters:filters}
+      var res = await axios.post(`${url}/search`, body);
+      return res.data
+    } catch (err) {
+      console.log('CustomerService searchCustomers error : ' + err)
       return (err)
     }
   }

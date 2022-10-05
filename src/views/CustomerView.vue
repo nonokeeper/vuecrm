@@ -58,29 +58,27 @@ import CustomerCreate from '@/components/Customer/CustomerCreate.vue';
 import RefreshButton from '@/components/Button/RefreshButton.vue';
 import CreateButton from '@/components/Button/CreateButton.vue';
 import CustomerFilter from '@/components/Customer/CustomerFilter.vue';
-import AddButton from '../components/Button/AddButton.vue';
-import RemoveButton from '../components/Button/RemoveButton.vue';
+import AddButton from '@/components/Button/AddButton.vue';
+import RemoveButton from '@/components/Button/RemoveButton.vue';
 
 const FIRSTPAGE = 1;
 const NBMAX = 20;
 const loaded = ref(false);
 const filter = ref(false);
-let filters = {meta: '', operator: '', val: ''};
-const filterCustomer = ref('');
+let numberOrString:any;
+let filters = {meta: '', operator: '', val: numberOrString};
 const refreshText = ref('Refresh');
 const edit = ref(false);
 const create = ref(false);
 const list = ref(true);
 const search = ref('');
 const customer = ref<CustomerInterface>();
-// const customers = ref<CustomerArrayInterface>();
 const customersFiltered = ref<CustomerArrayInterface>();
 const customersMeta = ref<CustomerInterface>();
-let customersArray = Array<CustomerInterface>();
 const nbTotalCustomers = ref(0);
 const pageNumber = ref(FIRSTPAGE);
 const size = ref(NBMAX);
-
+const metaType = ref('String');
 
 const isCheckAll = ref(false);
 const checkedItems = ref([]);
@@ -94,7 +92,7 @@ onBeforeMount( async () => {
   customersMeta.value = await CustomerService.getCustomersMeta();
   customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE,size.value);
   console.log('customersFiltered : ',customersFiltered.value);
-  nbTotalCustomers.value = customersFiltered.value!.nb;
+  nbTotalCustomers.value = customersFiltered.value!.count;
   search.value = 'X'; // only to force calculation of filteredCustomers
   search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
@@ -108,7 +106,7 @@ interface CustomerInterface {
 // Interfaces
 interface CustomerArrayInterface {
     "data": Array<CustomerInterface>,
-    "nb": number
+    "count": number
 }
 
 // Functions
@@ -141,33 +139,27 @@ const deletion = async (id:string) => {
 };
 
 // Interfaces
-interface FilterInterface {
-  meta:string,
-  operator:string,
-  val:string
-};
 
-/*
-const applyFilter = (a:string, b:string, c:string) => {
-  filters.value = {
-    meta : a,
-    operator : b,
-    val : c
-  };
-};
-*/
 const filterCustomers = async (attribute:string, operator:string, value:string) => {
   refreshText.value = 'Loading...';
   loaded.value = false;
   pageNumber.value = FIRSTPAGE;
   filters = {meta: attribute, operator: operator, val: value}
 
-  console.log('function filterCustomers - filters : ', filters);
+  const metaList = await CustomerService.getCustomersMeta();
+  metaType.value = metaList[attribute].type;
+  console.log('CustomerView.vue / filterCustomers() / metaType : ', metaType.value);
 
-  customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE, size.value, filters);
-  console.log('function filterCustomers - #customersFiltered : ', customersFiltered.value!.nb);
+  if (metaType.value === 'Int32') {
+    filters = {meta: attribute, operator: operator, val: parseInt(value)}
+  }
 
-  nbTotalCustomers.value = customersFiltered.value!.nb;
+  console.log('CustomerView.vue / function filterCustomers - filters : ', filters);
+
+  customersFiltered.value = await CustomerService.searchCustomers(FIRSTPAGE, size.value, filters);
+  console.log('CustomerView.vue > filterCustomers() > #customersFiltered : ', customersFiltered.value!.count);
+
+  nbTotalCustomers.value = customersFiltered.value!.count;
   search.value = 'X'; // only to force calculation of filteredCustomers
   search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
@@ -206,7 +198,7 @@ const refresh = async (page: number) => {
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
   customersFiltered.value = await CustomerService.getCustomers(page, size.value, filters);
-  nbTotalCustomers.value = customersFiltered.value!.nb;
+  nbTotalCustomers.value = customersFiltered.value!.count;
   search.value = 'X'; // only to reload filteredCustomers
   search.value = ''; // only to reload filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
