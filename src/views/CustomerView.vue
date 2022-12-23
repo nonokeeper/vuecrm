@@ -1,6 +1,6 @@
 <template>
   <main>
-    <div v-if="list" class="mt-2 mb-4">
+    <div v-if="list && authorized" class="mt-2 mb-4">
       <div class="relative m-4">
         <span class="absolute inset-y-0 left-3 flex items-center pl-2">
           <svg fill="none" stroke="#BBBBBB" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-6 h-6"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -12,7 +12,6 @@
       </div>
       <div class="inline-block space-x-6">
         <span v-if="loaded">{{ nbTotalCustomers }} Customers</span>
-        <span v-else>? Customers</span>
         <refresh-button :text="refreshText" @click="refresh(pageNumber)"/>
         <create-button text="New customer" @click="openCreate"/>
         <add-button v-if="!filter" text="Add Filter" @click="addFilter"/>
@@ -22,7 +21,10 @@
         <customer-filter @reset-filter="resetFilter" @filter-created="filterCustomers" :customer-meta="customersMeta"/>
       </div>
     </div>
-    <div v-if="loaded" class="grid grid-cols-4 gap-4">
+    <div v-if="loaded && list && !authorized" class="mt-2 mb-4">
+      NOT AUTHORIZED
+    </div>
+    <div v-if="loaded && authorized" class="grid grid-cols-4 gap-4">
       <div class="ml-4 col-span-2">Showing <span v-if="nbTotalCustomers > 0">{{ beginCursor }} to {{ endCursor }} of </span>{{ nbTotalCustomers }} results</div>
       <div>
         <label for="size"># max results </label>
@@ -41,7 +43,7 @@
         <i class="cursor-pointer fa-solid fa-forward-step" @click="last">&nbsp;</i>
       </div>
     </div>
-    <customer-list v-if="list && loaded" @edit="getCustomer" @delete="deletion" :customers="customersFiltered?.data" :customer-meta="customersMeta"/>
+    <customer-list v-if="list && loaded && authorized" @edit="getCustomer" @delete="deletion" :customers="customersFiltered?.data" :customer-meta="customersMeta"/>
     <customer-edit v-if="edit && customer" @cancelEdit="cancelEdit" :customer="customer" :customer-meta="customersMeta"/>
     <customer-create v-if="create" @cancelCreate="cancelCreate" @created="created" :customer-meta="customersMeta"/>
   </main>
@@ -51,6 +53,7 @@
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from 'vue';
 import CustomerService from '@/services/CustomerService';
+import { useUserStore } from "@/store/user";
 
 import CustomerList from '@/components/Customer/CustomerList.vue';
 import CustomerEdit from '@/components/Customer/CustomerEdit.vue';
@@ -64,9 +67,13 @@ import RemoveButton from '@/components/Button/RemoveButton.vue';
 const FIRSTPAGE = 1;
 const NBMAX = 20;
 const loaded = ref(false);
+const authorized = ref(false);
 const filter = ref(false);
 let numberOrString:any;
-let filters = {meta: '', operator: '', val: numberOrString};
+//let filters = {meta: '', operator: '', val: numberOrString};
+let metaFilter = ref('');
+let operatorFilter = ref('');
+let valFilter = ref('');
 const refreshText = ref('Refresh');
 const edit = ref(false);
 const create = ref(false);
@@ -83,16 +90,22 @@ const metaType = ref('String');
 const isCheckAll = ref(false);
 const checkedItems = ref([]);
 
-console.log('CustomerView.vue');
+const userStore = useUserStore();
+const token = userStore.user ? userStore.user.accessToken + ' ' + userStore.user.refreshToken : '';
+
+console.log('CustomerView.vue, user : ', userStore.user);
 
 // Data recovered before displaying results in Template
 onBeforeMount( async () => {
   refreshText.value = 'Loading...';
   loaded.value = false;
-  customersMeta.value = await CustomerService.getCustomersMeta();
-  customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE,size.value);
-  console.log('customersFiltered : ',customersFiltered.value);
-  nbTotalCustomers.value = customersFiltered.value!.count;
+  if (token != '') {
+    customersMeta.value = await CustomerService.getCustomersMeta();
+    customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
+    console.log('CustomerView > onBeforeMount > customersFiltered : ',customersFiltered.value);
+    nbTotalCustomers.value = customersFiltered.value!.nb;
+    if (nbTotalCustomers.value >= 0) {authorized.value = true}
+  }
   search.value = 'X'; // only to force calculation of filteredCustomers
   search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
@@ -106,7 +119,7 @@ interface CustomerInterface {
 // Interfaces
 interface CustomerArrayInterface {
     "data": Array<CustomerInterface>,
-    "count": number
+    "nb": number
 }
 
 // Functions
@@ -140,26 +153,26 @@ const deletion = async (id:string) => {
 
 // Interfaces
 
-const filterCustomers = async (attribute:string, operator:string, value:string) => {
+const filterCustomers = async (meta:string, operator:string, val:string) => {
   refreshText.value = 'Loading...';
   loaded.value = false;
   pageNumber.value = FIRSTPAGE;
-  filters = {meta: attribute, operator: operator, val: value}
+  metaFilter.value = meta;
+  operatorFilter.value = operator;
+  valFilter.value = val;
 
   const metaList = await CustomerService.getCustomersMeta();
-  metaType.value = metaList[attribute].type;
+  metaType.value = metaList[meta].type;
   console.log('CustomerView.vue / filterCustomers() / metaType : ', metaType.value);
 
-  if (metaType.value === 'Int32') {
-    filters = {meta: attribute, operator: operator, val: parseInt(value)}
+  //console.log('CustomerView.vue / function filterCustomers - filters : ', filters);
+  console.log('CustomerView.vue / function filterCustomers - token : ', token);
+  if (token != '') {
+  //customersFiltered.value = await CustomerService.searchCustomers(FIRSTPAGE, size.value, filters);
+    customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
+    console.log('CustomerView.vue > filterCustomers() > #customersFiltered : ', customersFiltered.value!.nb);
+    nbTotalCustomers.value = customersFiltered.value!.nb;
   }
-
-  console.log('CustomerView.vue / function filterCustomers - filters : ', filters);
-
-  customersFiltered.value = await CustomerService.searchCustomers(FIRSTPAGE, size.value, filters);
-  console.log('CustomerView.vue > filterCustomers() > #customersFiltered : ', customersFiltered.value!.count);
-
-  nbTotalCustomers.value = customersFiltered.value!.count;
   search.value = 'X'; // only to force calculation of filteredCustomers
   search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
@@ -168,11 +181,9 @@ const filterCustomers = async (attribute:string, operator:string, value:string) 
 }
 
 const resetFilter = () => {
-  filters = {
-    meta : '',
-    operator : '',
-    val : ''
-  };
+  metaFilter.value = '';
+  operatorFilter.value = '';
+  valFilter.value = '';
   //filterCustomer.value = '';
   refresh(FIRSTPAGE);
 };
@@ -197,8 +208,8 @@ const refresh = async (page: number) => {
   refreshText.value = 'Loading...'
   loaded.value = false;
   customersMeta.value = await CustomerService.getCustomersMeta();
-  customersFiltered.value = await CustomerService.getCustomers(page, size.value, filters);
-  nbTotalCustomers.value = customersFiltered.value!.count;
+  customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
+  nbTotalCustomers.value = customersFiltered.value!.nb;
   search.value = 'X'; // only to reload filteredCustomers
   search.value = ''; // only to reload filteredCustomers (value changed here from 'X' to '')
   loaded.value = true;
@@ -244,11 +255,9 @@ const addFilter = () => {
 
 const removeFilter = () => {
   filter.value = false;
-  filters = {
-    meta : '',
-    operator : '',
-    val : ''
-  };
+  metaFilter.value = '';
+  operatorFilter.value = '';
+  valFilter.value = '';
   refresh(FIRSTPAGE);
 };
 

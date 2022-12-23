@@ -1,11 +1,10 @@
 import axios from 'axios'
 
 const baseURL = import.meta.env.VITE_BASEURL
-
 const url = baseURL + 'customers'
 const urlMeta = baseURL + 'customers/meta'
 
-console.log('baseURL : '+baseURL);
+console.log('CustomerService baseURL : '+baseURL);
 
 class CustomerService {
   // Get Customers Meta
@@ -42,15 +41,36 @@ class CustomerService {
   }
 
   // Get Customers
-  static async getCustomers (pageNumber, size, filters) {
+  static async getCustomers (pageNumber, size, metaFilter, operatorFilter, valFilter, token) {
+    console.log('CustomerService > getCustomers > metaFilter : ',metaFilter);
+    console.log('CustomerService > getCustomers > operatorFilter : ',operatorFilter);
+    console.log('CustomerService > getCustomers > valFilter : ',valFilter);
     try {
-      const res = await axios.get(`${url}?pageNumber=${pageNumber}&size=${size}`, {
-        params: filters,
-      });
-      return res.data;
-    } catch (err) {
-      console.log('CustomerService getCustomers error : ' + err)
-      return (err)
+      console.log('CustomerService > getCustomers > try, token : ', token)
+      const res = await fetch(`${url}?pageNumber=${pageNumber}&size=${size}&meta=${metaFilter}&operator=${operatorFilter}&val=${valFilter}`, {
+          method: 'GET',
+          headers: {
+              'Content-type': 'application/json',
+              'Authorization': 'Bearer '+token
+          }
+        });
+        console.log('CustomerService > getCustomers > after fetch')
+        console.log('CustomerService > getCustomers > res.ok', res.ok)
+        if (res.ok) {
+          const data = await res.json();
+          return data
+        } else {
+          const message = `An error has occured: ${res.status} - ${res.statusText}`;
+            throw new Error(message);
+        }
+      } catch (err) {
+        const response = err.response
+        console.log('CustomerService > getCustomers > error response : ' + JSON.stringify(response));
+        //console.log('CustomerService > getCustomers > error response status: ' + err.response.status)
+        return ({
+          data: [{"errorMessage": response.data.message}],
+          count: -1
+        })
     }
   }
 

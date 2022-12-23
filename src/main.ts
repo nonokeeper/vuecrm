@@ -1,15 +1,36 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-
-import store from './store'
-import { mapState } from 'vuex'
-
-export const mixin = {
-    computed: mapState(['user','status'])
-}
-
+import { watch } from 'vue';
+import { createApp, ref } from 'vue'
+import App from '@/App.vue'
+import router from '@/router'
+import userRouter from "@/router/users.routes";
+import { createPinia } from "pinia";
 import './assets/tailwind.css'
+import { createRouter, createWebHistory } from 'vue-router';
+
+// Store management with PINIA
+const pinia = createPinia();
+
+pinia.use( (ctx) => {
+  const storeId = ctx.store.$id;
+  console.log(storeId);
+  const serializer = {
+    serialize : JSON.stringify,
+    deserialize: JSON.parse
+  }
+  // sync store with localstorage
+  if (window.localStorage.getItem(storeId)) {
+    const fromStorage = serializer.deserialize(window.localStorage.getItem(storeId)!);
+    if (fromStorage) {
+      ctx.store.$patch(fromStorage)
+    }
+  }
+
+  // listen to changes
+  ctx.store.$subscribe((mutation, state) => {
+    console.log('mutation state : ',mutation, state);
+    window.localStorage.setItem(storeId, serializer.serialize(state))
+  })
+})
 
 const app = createApp(App)
 
@@ -27,6 +48,18 @@ app.directive("click-outside", {
     },
 });
 
-app.use(router).use(store)
+const mainRoutes = router.options.routes;
+const userRoutes = userRouter.options.routes;
 
-app.mount('#app')
+var allRoutes: any[] = []
+const routes = allRoutes.concat(mainRoutes, userRoutes);
+
+const Allrouter = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: routes
+})
+
+app
+.use(Allrouter)
+.use(pinia)
+.mount('#app')
