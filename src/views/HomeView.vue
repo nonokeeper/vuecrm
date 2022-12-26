@@ -10,7 +10,6 @@
 
 <template>
   <main>
-    <TheWelcome />
-    User : {{ userStore.user }}<br/>
+    Welcome {{ userStore.user?.firstName }}<br/>
   </main>
 </template>
