@@ -4,6 +4,7 @@ import HomeView from '@/views/HomeView.vue';
 // Lazy load components
 const CustomerView = () => import ('@/views/CustomerView.vue');
 const AboutView = () => import ('@/views/AboutView.vue');
+const DataView = () => import ('@/views/DataView.vue');
 const DataExplorerView = () => import ('@/views/DataExplorerView.vue');
 const CollectionView = () => import ('@/views/CollectionView.vue');
 
@@ -21,9 +22,14 @@ const router = createRouter({
       component: CustomerView
     },
     {
-      path: '/data',
-      name: 'Data Explorer',
+      path: '/component',
+      name: 'Component',
       component: DataExplorerView
+    },
+    {
+      path: '/data',
+      name: 'Data',
+      component: DataView
     },
     {
       path: '/about',

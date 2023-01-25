@@ -1,15 +1,6 @@
 <template>
   <main>
     <div v-if="list && authorized" class="mt-2 mb-4">
-      <div class="relative m-4">
-        <span class="absolute inset-y-0 left-3 flex items-center pl-2">
-          <svg fill="none" stroke="#BBBBBB" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-6 h-6"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </span>
-        <input v-model="search" placeholder="Global search" type="text" class="border border-gray-300 ml-4 px-8 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
-        <span @click="search=''" class="absolute inset-y-0 left-60 flex items-center">
-          <i class="text-gray-400 dark:text-gray-300 fa-regular fa-circle-xmark"></i>
-        </span>
-      </div>
       <div class="inline-block space-x-6">
         <span v-if="loaded">{{ nbTotalCustomers }} Customers</span>
         <refresh-button :text="refreshText" @click="refresh(pageNumber)"/>
@@ -188,22 +179,6 @@ const resetFilter = () => {
   refresh(FIRSTPAGE);
 };
 
-/*
-const getCustomerDataFromMeta = (meta:{levelup:string}, index:string, cust:CustomerInterface) => {
-  const levelup:string = meta?.levelup
-  var tab = levelup?.split('.')
-  if (levelup === '') return cust[index] // return the field directly if no hierarchy
-  if (tab?.length >= 0)
-    for (var i=0; i< tab.length; i++) { // loop with all levels separated by a dot
-      if (!cust)
-        return '' // as soon as one level does not exist, exit with empty result
-      cust = cust[tab[i]]
-    }
-  if (cust) return cust[index]
-  return '' // default empty value if the last level does not exist
-}
-*/
-
 const refresh = async (page: number) => {
   refreshText.value = 'Loading...'
   loaded.value = false;
@@ -261,53 +236,8 @@ const removeFilter = () => {
   refresh(FIRSTPAGE);
 };
 
-/*
-const testCustomer = (cust: CustomerInterface) => {
-  var meta = filters?.value?.meta;
-  var operator = filters?.value?.operator;
-  var val = filters?.value?.val;
-  var custData = '';
-
-//console.log('operator : ',filters?.value?.operator);
-
-  let test = false;
-  if (search.value === '') test=true;
-  for (const index in customersMeta.value) {
-    if (search.value !== '') {
-      custData = getCustomerDataFromMeta(customersMeta.value[index], index, cust);
-      if (custData) {
-        let data = custData.toString().toLowerCase();
-        if (data.includes(search.value.toLowerCase())) test=true;
-      }
-    }
-    if (meta && operator && val) {
-      let custFilterData = getCustomerDataFromMeta(customersMeta.value[meta], meta, cust);
-      switch (operator) {
-        case 'equals':
-          (custFilterData && custFilterData == val) ? test=true : test=false;
-          break;
-        case 'contains':
-          (custFilterData && custFilterData.toLowerCase().includes(val.toLowerCase())) ? test=true : test=false;
-          break;
-        default:
-          break;
-      }
-    }
-  }
-  return test
-};
-*/
-
 // Computed variables
-
-// const filteredCustomers = computed(() => customersArray.filter((cust: CustomerInterface) => testCustomer(cust)));
-
 const pageTotal = computed(() => ~~(nbTotalCustomers.value / size.value) + 1);
-
 const beginCursor = computed(() => size.value * (pageNumber.value - 1) + 1);
-
 const endCursor = computed(() => (size.value * pageNumber.value < nbTotalCustomers.value)? size.value * pageNumber.value : nbTotalCustomers.value);
-
-// const nbCustomers = computed(() => filteredCustomers.value.length);
-
 </script>
