@@ -17,7 +17,7 @@
       </div>
     </div>
     <div>
-      <collection-list v-if="list" title="Collection List" :collections="fcollections" @edit="editCollection" @delete="deleteCollection"/>
+      <collection-list v-if="list" title="Collection List" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
       <collection-edit v-if="edit" @cancelEdit="cancelEdit" @save="saveCollection" :collection="collectionName"/>
       <collection-create v-if="create" @cancelCreate="cancelCreate" @create="createCollection"/>
     </div>
@@ -36,6 +36,7 @@ import RefreshButton from '@/components/Button/RefreshButton.vue';
 import AddButton from '../components/Button/AddButton.vue';
 import RemoveButton from '../components/Button/RemoveButton.vue';
 import ResetButton from '@/components/Button/ResetButton.vue';
+import {useRouter } from 'vue-router';
 
 // Variables
 const collectionName = ref('');
@@ -48,6 +49,7 @@ const list = ref(true);
 const edit = ref(false);
 const create = ref(false);
 const refreshText = ref('Refresh');
+const router = useRouter();
 
 console.log('CollectionView.vue');
 
@@ -113,6 +115,12 @@ const editCollection = (name:string) => {
   list.value = false;
   edit.value = true;
   collectionName.value = name;
+}
+
+const openCollection = (name:string) => {
+  console.log('openCollection called for '+name);
+  router.push({ name: 'Data', query: { entity: name } });
+  //router.push({ name: 'Home'});
 }
 
 const createCollection = async (name:string) => {

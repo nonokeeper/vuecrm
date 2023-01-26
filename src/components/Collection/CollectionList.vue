@@ -19,6 +19,9 @@
                 <td class="px-3 py-2">
                     <i @click="deletion(coll?.name)" class="fas fa-trash text-red-600 cursor-pointer" title="delete"></i>
                 </td>
+                <td class="px-3 py-2">
+                    <open-button type="submit" text="Open Collection" @click="open(coll?.name)"/>
+                </td>
             </tr>
         </tbody>
     </table>
@@ -55,12 +58,12 @@
 
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
+import OpenButton from '@/components/Button/OpenButton.vue';
 
 // Variables
 const showConfirmDialog = ref(false);
 const collectionToDelete = ref('');
-const collectionToEdit = ref('');
 const noDeletion = ref(true);
 
 // Functions
@@ -70,7 +73,11 @@ const deletion = (name:string) => {
 };
 
 const edit = (name:string) => {
-   emit('edit', name);
+    emit('edit', name);
+}
+
+const open = (name:string) => {
+    emit('open', name);
 }
 
 const confirmDelete = () => {
@@ -103,6 +110,7 @@ interface Props {
 const emit = defineEmits<{
     (e: 'edit', name:string) : void
     (e: 'delete', name:string) : void
+    (e: 'open', name:string) : void
 }>();
 
 const props = defineProps<Props>();
