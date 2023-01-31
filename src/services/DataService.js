@@ -102,20 +102,21 @@ class DataService {
   }
 
   // Create a Data
-  static async insertData (body) {
-    return axios.post(url, body)
+  static async insertData (body, entity) {
+    return axios.post(`${url}/${entity}`, body)
   }
 
   // Update a Data
-  // Called from FO CustomerEdit.vue with full data (including the _id)
-  // Call BO then customersController.js to do a router.put
+  // Called from FO DataEdit.vue with full data (including the _id)
+  // Call BO then dataController.js to do a router.put
   static async updateData (body) {
     return axios.put(url, body)
   }
 
   // Delete a Data
-  static async deleteData (id) {
-    return axios.delete(`${url}/${id}`)
+  static async deleteData (id, entity) {
+    console.log(`DataService > deleteData with ${entity} and id : ${id}`)
+    return axios.delete(`${url}/${entity}/${id}`)
   }
 }
 

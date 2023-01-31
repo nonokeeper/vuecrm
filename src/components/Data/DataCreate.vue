@@ -1,14 +1,14 @@
 <template>
     <div class="ml-8 mb-4 container">
         <div>
-            <span @click="cancel" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to Customers List</span>
+            <span @click="cancel" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the {{ props.entity }} list</span>
             <span :class="{ invisible: !showMessage}" class="ml-4 rounded border-l-4 bg-yellow-500 text-sm text-white px-3 py-2 border-yellow-800 shadow-xl items-center">
             {{ message }}<i @click="showMessage = false" class="ml-2 far fa-times-circle"></i>
             </span>
         </div>
-        <form @submit.prevent="createCust" method="POST">
+        <form @submit.prevent="createData" method="POST">
             <div class="mt-8 mb-6 grid grid-cols-3 gap-8">
-                <div class="relative flex items-center" v-for="(meta, index) in props.customerMeta" v-bind:key="index">
+                <div class="relative flex items-center" v-for="(meta, index) in props.dataMeta" v-bind:key="index">
                     <label :id="'label-'+index.toString()" :for="index.toString()" :class="labelClass">{{ meta.label }}</label>
                     <svg v-if="index.toString() === 'email'" xmlns="http://www.w3.org/2000/svg" class="pointer-events-none w-7 h-7 absolute top-1/2 transform -translate-y-1/2 left-2" viewBox="0 0 20 20" fill="gray">
                         <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -27,7 +27,7 @@
 <script setup lang="ts">
 
 // Imports
-import CustomerService from '@/services/CustomerService';
+import DataService from '@/services/DataService';
 import { ref, computed, onMounted } from 'vue';
 import CancelButton from "@/components/Button/CancelButton.vue";
 import SaveButton from "@/components/Button/SaveButton.vue";
@@ -35,7 +35,7 @@ import SaveButton from "@/components/Button/SaveButton.vue";
 // Variables
 const message = ref('');
 const showMessage = ref(false);
-const insertCustReturn = ref<insertCustInterface>();
+const insertDataReturn = ref<insertDataInterface>();
 const labelClass = ref('absolute left-1 -top-6 dark:text-gray-100 text-gray-800 text-sm');
 const textError = ref('absolute left-1 -top-6 dark:text-red-400 text-red-600 text-sm');
 const emailInput = ref<HTMLInputElement>();
@@ -82,10 +82,10 @@ const updateBody = (body:any, index:string, level:string) => {
     return body;
 };
 
-// Insert this new Customer
-const createCust = async () => {
+// Insert this new Data record
+const createData = async () => {
     let body = {};
-    let metas = props.customerMeta;
+    let metas = props.dataMeta;
     var email = emailInput?.value;
     console.log(email?.value);
     if (metas) {
@@ -100,9 +100,9 @@ const createCust = async () => {
         email.focus();
         labelEmailInput.value?.setAttribute('class', textError.value);
     } else {
-        insertCustReturn.value = await CustomerService.insertCustomer(body);
+        insertDataReturn.value = await DataService.insertData(body, props.entity);
         //console.log('Return after creation : ',insertCustReturn);
-        if (insertCustReturn.value.status === 201) {
+        if (insertDataReturn.value.status === 201) {
             created();
         } else {
             showMessage.value = true;
@@ -110,14 +110,6 @@ const createCust = async () => {
         }
     }
 };
-/*
-const focusChange = (index: string) => {
-    console.log('focus on ',index);
-    if (index !== 'email') {
-        showMessage.value = false
-        labelEmailInput.value?.setAttribute('class', labelClass.value);
-    }
-}; */
 
 const focusChange = () => {
     showMessage.value = false
@@ -132,13 +124,14 @@ const metaType = (index: string) => {
 };
 
 // Interfaces
-interface CustomerInterface {
+interface DataInterface {
     [key: string]: any
 };
 interface Props {
-    customerMeta: CustomerInterface|undefined
+    dataMeta: DataInterface|undefined
+    entity: string|undefined
 };
-interface insertCustInterface {
+interface insertDataInterface {
     data: string,
     status: number,
     statusText: string
