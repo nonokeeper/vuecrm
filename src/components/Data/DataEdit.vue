@@ -1,21 +1,21 @@
 <template>
     <div class="ml-8 mb-4 container">
         <div>
-            <span @click="cancel" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to Customers List</span>
+            <span @click="cancel" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the {{ props.entity }} list</span>
             <span :class="{ invisible: !showMessage}" class="ml-4 rounded border-l-4 bg-green-400 text-sm text-white px-2 py-3 border-green-800 shadow-xl items-center">
             {{ message }}<i @click="showMessage = false" class="ml-2 far fa-times-circle"></i>
             </span>
         </div>
-        <form name="update" ref="updateForm" @submit.prevent="updateCust(true)">
+        <form name="update" ref="updateForm" @submit.prevent="updateData(true)">
             <div class="mt-8 mb-6 grid grid-cols-3 gap-8">
-            <div class="" v-for="(meta, index) in props.customerMeta" :set="custData = getDataFrom(meta.levelup, index)" v-bind:key="index">
+            <div class="" v-for="(meta, index) in props.dataMeta" :set="entityData = getDataFrom(meta.levelup, index)" v-bind:key="index">
                 <label :for="index.toString()" class="block left-1 -top-2 dark:text-gray-100 text-gray-800 text-sm">{{ meta.label }}</label>
-                <input :required="meta.required" :id="index.toString()" class="py-2 text-sm border rounded-md px-2 text-gray-800 focus:outline-none dark:border-2 dark:focus:border-yellow-200 focus:border-yellow-800" :value="custData" />
+                <input :required="meta.required" :id="index.toString()" class="py-2 text-sm border rounded-md px-2 text-gray-800 focus:outline-none dark:border-2 dark:focus:border-yellow-200 focus:border-yellow-800" :value="entityData" />
             </div>
             </div>
             <div class="flex items-stretch">
             <button type="reset" class="rounded px-2 py-1 text-gray-100 bg-gray-500 hover:bg-gray-600" @click="cancel">Cancel</button>
-            <button class="disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded ml-4 px-2 py-1 text-gray-100 bg-yellow-600 hover:bg-yellow-700" type="button" @click="updateCust(false)">Save</button>
+            <button class="disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded ml-4 px-2 py-1 text-gray-100 bg-yellow-600 hover:bg-yellow-700" type="button" @click="updateData(false)">Save</button>
             <button class="disabled:opacity-50 disabled:cursor-not-allowed rounded ml-4 px-2 py-1 text-gray-100 bg-blue-600 hover:bg-blue-700" type="submit">Save and Quit</button>
             </div>
         </form>
@@ -23,32 +23,32 @@
 
 </template>
 <script setup lang="ts">
-import CustomerService from '@/services/CustomerService';
+import DataService from '@/services/DataService';
 import { ref } from 'vue';
 
 // Variables
 const message = ref('');
 const showMessage = ref(false);
-let custData = '';
+let entityData = '';
 
 // Functions
-// Update Customer data based on edited values in Form
-const updateCust = async (quit: Boolean) => {
-    let body = props.customer as any;
-    let metas = props.customerMeta;
+// Update data based on edited values in Form
+const updateData = async (quit: Boolean) => {
+    let body = props.data as any;
+    let metas = props.dataMeta;
     if (metas) {
         for (let meta in metas) {
             //console.log('level de meta : '+metas[meta].levelup);
             updateBody(body, meta, metas[meta].levelup);
         }
     }
-    if (props.customer) {
+    if (props.data) {
         console.log('body : '+JSON.stringify(body));
         if (quit) {
-            await CustomerService.updateCustomer(body)
+            await DataService.updateData(body, props.entity)
             emit('cancelEdit');
         } else {
-            await CustomerService.updateCustomer(body)
+            await DataService.updateData(body, props.entity)
         }
     }
 };
@@ -73,14 +73,14 @@ const getDataFrom = (level:string, index:string|number) => {
     let fieldValue = '';
     let field = '';
     let array = [''];
-    if (props.customer) {
+    if (props.data) {
         if (level === '' || !level) {
             field = index.toString();
-            fieldValue = props.customer[field];
+            fieldValue = props.data[field];
         } else {
             field = level + '.' + index;
             array = field.split('.');
-            fieldValue = getNestedObject(props.customer, array)
+            fieldValue = getNestedObject(props.data, array)
         }
     }
     // console.log('field : '+ field + ' et index : ' + index + ' : ' + fieldValue);
@@ -105,12 +105,13 @@ const updateBody = (body:any, index:string, level:string) => {
 };
 
 // Interfaces
-interface CustomerInterface {
+interface DataInterface {
     [key: string]: any
 };
 interface Props {
-    customer: CustomerInterface|undefined
-    customerMeta: CustomerInterface|undefined
+    data: DataInterface|undefined
+    dataMeta: DataInterface|undefined
+    entity: string|undefined
 };
 
 // Props & Emit

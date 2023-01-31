@@ -44,18 +44,10 @@
       </div>
     </div>
 
-    <data-list
-      v-if="list && loaded && authorized"
-      @edit="getData"
-      @delete="deletion"
-      :data="dataFiltered?.data"
-      :data-meta="dataMeta"
-    />
-    <!--
-        <data-edit v-if="edit && data" @cancelEdit="cancelEdit" :data="data" :data-meta="dataMeta"/>
-    -->
-      <data-create v-if="create" @cancelCreate="cancelCreate" @created="created" :data-meta="dataMeta" :entity="entity"/>
-      
+    <data-list v-if="list && loaded && authorized" @edit="getData" @delete="deletion" :data="dataFiltered?.data" :data-meta="dataMeta"/>
+    <data-edit v-if="edit && data" @cancelEdit="cancelEdit" :data="data" :data-meta="dataMeta" :entity="entity"/>
+    <data-create v-if="create" @cancelCreate="cancelCreate" @created="created" :data-meta="dataMeta" :entity="entity"/>
+    
   </main>
 </template>
 
@@ -67,9 +59,8 @@ import { useRouter } from "vue-router";
 
 import DataList from "@/components/Data/DataList.vue";
 import DataCreate from '@/components/Data/DataCreate.vue';
-
-/* 
 import DataEdit from '@/components/Data/DataEdit.vue';
+/* 
 import DataFilter from '@/components/Data/DataFilter.vue';
 */
 

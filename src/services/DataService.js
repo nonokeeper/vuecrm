@@ -90,7 +90,7 @@ class DataService {
     }
   }
 
-  // Get Data by Id
+  // Get record by Id
   static async getDataById (id) {
     try {
       const res = await axios.get(`${url}/${id}`)
@@ -101,19 +101,19 @@ class DataService {
     }
   }
 
-  // Create a Data
+  // Create a record in this entity
   static async insertData (body, entity) {
     return axios.post(`${url}/${entity}`, body)
   }
 
-  // Update a Data
+  // Update a record for this entity
   // Called from FO DataEdit.vue with full data (including the _id)
-  // Call BO then dataController.js to do a router.put
-  static async updateData (body) {
-    return axios.put(url, body)
+  // Call BO then dataController.js to do a router.put for this entity
+  static async updateData (body, entity) {
+    return axios.put(`${url}/${entity}`, body)
   }
 
-  // Delete a Data
+  // Delete a record in this entity
   static async deleteData (id, entity) {
     console.log(`DataService > deleteData with ${entity} and id : ${id}`)
     return axios.delete(`${url}/${entity}/${id}`)
