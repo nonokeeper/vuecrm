@@ -82,7 +82,8 @@ const isCheckAll = ref(false);
 const checkedItems = ref([]);
 
 const userStore = useUserStore();
-const token = userStore.user ? userStore.user.accessToken + ' ' + userStore.user.refreshToken : '';
+const user = userStore.user;
+const token = user ? user.accessToken + ' ' + user.refreshToken : '';
 
 console.log('CustomerView.vue, user : ', userStore.user);
 
@@ -95,7 +96,7 @@ onBeforeMount( async () => {
     customersFiltered.value = await CustomerService.getCustomers(FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
     console.log('CustomerView > onBeforeMount > customersFiltered : ',customersFiltered.value);
     nbTotalCustomers.value = customersFiltered.value!.nb;
-    if (nbTotalCustomers.value >= 0) {authorized.value = true}
+    if (user) {authorized.value = true}
   }
   search.value = 'X'; // only to force calculation of filteredCustomers
   search.value = ''; // only to force calculation of filteredCustomers (value changed here from 'X' to '')

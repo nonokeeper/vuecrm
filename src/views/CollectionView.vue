@@ -7,12 +7,12 @@
       <add-button v-if="list && !filter" text="Add Filter" @click="addFilter"/>
       <remove-button v-if="list && filter" text="Remove Filter" @click="removeFilter"/>
     </div>
-    <div v-if="filter" class="grid grid-cols-2">
-      <div class="relative">
+    <div v-if="filter" class="flex gap-6">
+      <div class="flex-none">
         <input v-model="search" placeholder="Collection search" type="text" class="mx-2 border border-gray-300 px-4 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
         <reset-button class="-translate-x-8 absolute mt-1" @click="clearSearch"/>
       </div>
-      <div>
+      <div class="shrink">
         <filter-button class="-translate-x-4" @click="searchCollections(search)"/>
       </div>
     </div>
