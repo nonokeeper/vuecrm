@@ -9,14 +9,16 @@ class CollectionService {
 
   // Create a Collection
   static async createCollection (name) {
-    //console.log('CollectionService createCollection');
-    try {
-      const res = await axios.post(`${url}/${name}`)
-      return res.data
-    } catch (err) {
-      console.log('CollectionService createCollection error : ' + err)
-      return (err)
-    }
+    if (name !== '') {
+      try {
+        const res = await axios.post(`${url}/${name}`)
+        console.log('CollectionService createCollection OK');
+        return res.data
+      } catch (err) {
+        console.log('CollectionService createCollection error : ' + err)
+        return (err)
+      }
+    } else console.log('CollectionService createCollection KO');
   }
 
   // Modify the collection name

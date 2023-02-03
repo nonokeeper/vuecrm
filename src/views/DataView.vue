@@ -1,6 +1,6 @@
 d<template>
   <main>
-    <div v-if="list && authorized" class="mt-2 mb-4">
+    <div v-if="flagCollection && list && authorized" class="mt-2 mb-4">
       <div class="inline-block space-x-6">
         <refresh-button :text="refreshText" @click="refresh()" />
         <create-button text="New" @click="openCreate" />
@@ -13,16 +13,28 @@ d<template>
         </div>
         -->
     </div>
+    <div v-if="!flagCollection && flagListCollection && authorized" class="mt-2 mb-4">
+      <div class="inline-block space-x-6">
+        <refresh-button :text="refreshText" @click="refresh()" />
+        <create-button text="New" @click="openCreateCollection" />
+        <add-button v-if="!filterCollection" text="Add Filter" @click="addFilterCollection" />
+        <remove-button v-if="filterCollection" text="Remove Filter" @click="removeFilterCollection" />
+      </div>
+      <!--
+        <div v-if="filter" class="">
+          <data-filter @reset-filter="resetFilter" @filter-created="filterData" :data-meta="dataMeta"/>
+        </div>
+        -->
+    </div>
+    
     <div v-if="loaded && list && !authorized" class="mt-2 mb-4">NOT AUTHORIZED</div>
-    <div v-if="collection" class="mb-4">
+    <div v-if="flagCollection" class="mb-4">
       <span @click="back" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the collections list</span>
     </div>
 
-    <div v-if="collection && loaded && authorized" class="grid grid-cols-4 gap-4">
+    <div v-if="flagCollection && loaded && authorized" class="grid grid-cols-4 gap-4">
       <div class="ml-4 col-span-2">
-        Showing
-        <span v-if="nbTotalData > 0">{{ beginCursor }} to {{ endCursor }} of </span
-        >{{ nbTotalData }} results
+        Showing <span v-if="nbTotalData > 0">{{ beginCursor }} to {{ endCursor }} of </span>{{ nbTotalData }} results
       </div>
       <div>
         <label for="size"># max results </label>
@@ -36,25 +48,19 @@ d<template>
         <i class="cursor-pointer fa-solid fa-backward-step" @click="first">&nbsp;</i
         >&nbsp;
         <i class="cursor-pointer fa-solid fa-angle-left" @click="previous">&nbsp;</i>Page
-        <input
-          class="dark:text-black w-16"
-          type="number"
-          v-model="pageNumber"
-          @change="refresh()"
-        />
-        / {{ pageTotal }}&nbsp;
+        <input class="dark:text-black w-16" type="number" v-model="pageNumber" @change="refresh()"/> / {{ pageTotal }}&nbsp;
         <i class="cursor-pointer fa-solid fa-angle-right" @click="next">&nbsp;</i>&nbsp;
         <i class="cursor-pointer fa-solid fa-forward-step" @click="last">&nbsp;</i>
       </div>
     </div>
 
-    <collection-list v-if="!collection && list" title="Collection List" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
-    <collection-edit v-if="!collection && edit" @cancelEdit="cancelEdit" @save="saveCollection" :collection="collectionName"/>
-    <collection-create v-if="!collection && create" @cancelCreate="cancelCreate" @create="createCollection"/>
+    <collection-list v-if="!flagCollection && flagListCollection" title="Collection List" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
+    <collection-edit v-if="!flagCollection && flagEditCollection" @cancelEdit="cancelEditCollection" @save="saveCollection" :collection="collectionName"/>
+    <collection-create v-if="!flagCollection && flagCreateCollection" @cancelCreate="cancelCreateCollection" @create="createCollection"/>
 
-    <data-list v-if="collection && list && loaded && authorized" @edit="getData" @delete="deletion" :data="dataFiltered?.data" :data-meta="dataMeta"/>
-    <data-edit v-if="collection && edit && data" @cancelEdit="cancelEdit" :data="data" :data-meta="dataMeta" :entity="entity"/>
-    <data-create v-if="collection && create" @cancelCreate="cancelCreate" @created="created" :data-meta="dataMeta" :entity="entity"/>
+    <data-list v-if="flagCollection && list && loaded && authorized" @edit="getData" @delete="deletion" :data="dataFiltered?.data" :data-meta="dataMeta"/>
+    <data-edit v-if="flagCollection && edit && data" @cancelEdit="cancelEdit" :data="data" :data-meta="dataMeta" :entity="entity"/>
+    <data-create v-if="flagCollection && create" @cancelCreate="cancelCreate" @created="created" :data-meta="dataMeta" :entity="entity"/>
 
   </main>
 </template>
@@ -63,7 +69,6 @@ d<template>
 import { ref, onBeforeMount, computed } from "vue";
 import DataService from "@/services/DataService";
 import { useUserStore } from "@/store/user";
-import { useRouter } from "vue-router";
 
 import DataList from "@/components/Data/DataList.vue";
 import DataCreate from '@/components/Data/DataCreate.vue';
@@ -87,7 +92,6 @@ const NBMAX = 20;
 const loaded = ref(false);
 const authorized = ref(false);
 const filter = ref(false);
-const router = useRouter();
 
 let metaFilter = ref('');
 let operatorFilter = ref('');
@@ -108,9 +112,13 @@ const pageNumber = ref(FIRSTPAGE);
 const size = ref(NBMAX);
 const metaType = ref("String");
 const entity = ref('');
-const collection = ref(false);
+const flagCollection = ref(false);
+const flagListCollection = ref(false);
+const flagEditCollection = ref(false);
+const flagCreateCollection = ref(false);
+const filterCollection = ref(false);
 
-console.log("DataView > Entity : ", entity);
+console.log("DataView > Entity : ", entity.value);
 const userStore = useUserStore();
 const user = userStore.user;
 // token variable with accessToken & refreshToken, empty if not connected
@@ -124,12 +132,14 @@ onBeforeMount(async () => {
   refreshText.value = "Loading...";
   loaded.value = false;
   fcollections.value = await CollectionService.findCollections();
-  if (entity) {
+  if (entity.value !== '') {
     dataMeta.value = await DataService.getDataMeta(entity);
     dataFiltered.value = await DataService.getData(entity, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
     console.log("DataView > onBeforeMount > dataFiltered : ", dataFiltered.value);
     console.log("DataView > onBeforeMount > dataMeta : ", dataMeta.value);
     nbTotalData.value = dataFiltered.value!.nb;
+  } else {
+    flagListCollection.value = true;
   }
   search.value = "X"; // only to force calculation of filteredData
   search.value = ""; // only to force calculation of filteredData (value changed here from 'X' to '')
@@ -137,17 +147,21 @@ onBeforeMount(async () => {
   refreshText.value = "Refresh";
 });
 
+// Interfaces
+
 interface DataInterface {
   [key: string]: any;
 }
 
-// Interfaces
 interface DataArrayInterface {
   data: Array<DataInterface>;
   nb: number;
 }
 
 // Functions
+
+// Data Section
+
 const getData = (dataInterface: DataInterface | undefined) => {
   //console.log('DataView -- getData, data : ', data);
   data.value = dataInterface;
@@ -176,7 +190,34 @@ const deletion = async (id: string) => {
   refresh();
 };
 
-// Interfaces
+// Collection Section
+
+const cancelEditCollection = () => {
+  flagEditCollection.value = false;
+  flagListCollection.value = true;
+};
+
+const cancelCreateCollection = () => {
+  flagCreateCollection.value = false;
+  flagListCollection.value = true;
+};
+
+const openCreateCollection = () => {
+  flagCreateCollection.value = true;
+  flagListCollection.value = false;
+};
+
+const addFilterCollection = () => {
+  filterCollection.value = true;
+};
+
+const removeFilterCollection = () => {
+  filterCollection.value = false;
+  metaFilter.value = "";
+  operatorFilter.value = "";
+  valFilter.value = "";
+  refresh();
+};
 
 const filterData = async (meta: string, operator: string, val: string) => {
   refreshText.value = "Loading...";
@@ -218,15 +259,23 @@ const resetFilter = () => {
 };
 
 const refresh = async () => {
-  refreshText.value = "Loading...";
-  loaded.value = false;
-  dataMeta.value = await DataService.getDataMeta(entity.value);
-  dataFiltered.value = await DataService.getData(entity.value, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
-  nbTotalData.value = dataFiltered.value!.nb;
-  search.value = "X"; // only to reload filteredData
-  search.value = ""; // only to reload filteredData (value changed here from 'X' to '')
-  loaded.value = true;
-  refreshText.value = "Refresh";
+  if (entity.value != '') {
+    refreshText.value = "Loading...";
+    loaded.value = false;
+    dataMeta.value = await DataService.getDataMeta(entity.value);
+    dataFiltered.value = await DataService.getData(entity.value, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
+    nbTotalData.value = dataFiltered.value!.nb;
+    search.value = "X"; // only to reload filteredData
+    search.value = ""; // only to reload filteredData (value changed here from 'X' to '')
+    loaded.value = true;
+    refreshText.value = "Refresh";
+  } else {
+      refreshText.value = "Loading...";
+      loaded.value = false;
+      fcollections.value = await CollectionService.findCollections();
+      loaded.value = true;
+      refreshText.value = "Refresh";
+  }
 };
 
 const next = () => {
@@ -258,7 +307,7 @@ const first = () => {
 };
 
 const back = () => {
-  collection.value = false;
+  flagCollection.value = false;
   entity.value = '';
 }
 
@@ -280,8 +329,8 @@ const removeFilter = () => {
 };
 
 const saveCollection = async (collection:string, field:string, label:string) => {
-  console.log('saveCollection, name = '+collection+', field = '+field+', new label = '+label);
-  edit.value = false
+  console.log('DataView > saveCollection, name = '+collection+', field = '+field+', new label = '+label);
+  flagEditCollection.value = false
   const res = await CollectionService.majCollection(collection, field, label);
   //console.log('save Res : ', res);
   editCollection(collection);
@@ -289,31 +338,31 @@ const saveCollection = async (collection:string, field:string, label:string) => 
 
 const editCollection = (name:string) => {
   //console.log('editCollection, name = '+name);
-  list.value = false;
-  edit.value = true;
+  flagListCollection.value = false;
+  flagEditCollection.value = true;
   collectionName.value = name;
 }
 
 const openCollection = (name:string) => {
-  console.log('openCollection called for '+name);
-  collection.value = true;
+  console.log('DataView > openCollection called for '+name);
+  flagCollection.value = true;
   entity.value = name;
   refresh();
 }
 
 const createCollection = async (name:string) => {
-  //console.log('createCollection, name = '+name);
-  list.value = true;
-  edit.value = true;
-  //collectionName.value = name;
+  flagListCollection.value = false;
+  console.log('DataView > createCollection, name = '+name);
   const res = await CollectionService.createCollection(name);
-  console.log('createCollection res : ',res);
+  flagCreateCollection.value = false;
+  fcollections.value = await CollectionService.findCollections();
+  flagListCollection.value = true;
 }
 
 const deleteCollection = async (name:string) => {
   const res = await CollectionService.deleteCollection(name);
-  console.log(res);
   collections.value = await CollectionService.findCollections();
+  refresh();
 };
 
 const searchCollections = async (name:string) => {

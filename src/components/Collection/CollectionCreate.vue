@@ -35,7 +35,6 @@
 </template>
 
 <script setup lang="ts">
-import CollectionService from '@/services/CollectionService';
 import { ref } from 'vue';
 import CreateButton from '../Button/CreateButton.vue';
 
@@ -44,17 +43,6 @@ const message = ref('');
 const name = ref('');
 const label = ref('');
 const showMessage = ref(false);
-const collection = ref<metaInterface>();
-
-// Interfaces
-interface metaInterface {
-    [key: string]: {
-        "type": string
-        "label": string,
-        "levelup": string,
-        "required": boolean
-    }
-};
 
 const emit = defineEmits<{
     (e: 'cancelCreate') : void
@@ -67,8 +55,13 @@ const cancel = () => {
     emit('cancelCreate');
 };
 
-const save = (collection: any) => {
-    emit('create', collection);
+const save = () => {
+    console.log('CollectionCreate > save, name = ', name.value);
+
+    if(name.value === '' || name.value.includes(' ')) {
+        message.value = 'Bad collection name entered : not empty and no space please';
+        showMessage.value = true;
+    } else emit('create', name.value);
 };
 
 </script>
