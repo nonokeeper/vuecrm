@@ -27,8 +27,8 @@ d<template>
         -->
     </div>
     
-    <div v-if="loaded && list && !authorized" class="mt-2 mb-4">NOT AUTHORIZED</div>
-    <div v-if="flagCollection" class="mb-4">
+    <div v-if="loaded && list && !authorized" class="mt-2 mb-4">Login is required for this page</div>
+    <div v-if="flagCollection && authorized" class="mb-4">
       <span @click="back" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the collections list</span>
     </div>
 
@@ -54,7 +54,7 @@ d<template>
       </div>
     </div>
 
-    <collection-list v-if="!flagCollection && flagListCollection" title="Collection List" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
+    <collection-list v-if="!flagCollection && flagListCollection && authorized" :title="labelCollectionList" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
     <collection-edit v-if="!flagCollection && flagEditCollection" @cancelEdit="cancelEditCollection" @save="saveCollection" :collection="collectionName"/>
     <collection-create v-if="!flagCollection && flagCreateCollection" @cancelCreate="cancelCreateCollection" @create="createCollection"/>
 
@@ -234,8 +234,7 @@ const filterData = async (meta: string, operator: string, val: string) => {
   //console.log('DataView.vue / function filterData - filters : ', filters);
   console.log("DataView.vue / function filterData - token : ", token);
   if (token != "") {
-    dataFiltered.value = await DataService.getData(
-      FIRSTPAGE,
+    dataFiltered.value = await DataService.getData(FIRSTPAGE,
       size.value,
       metaFilter.value,
       operatorFilter.value,
@@ -263,7 +262,8 @@ const refresh = async () => {
     refreshText.value = "Loading...";
     loaded.value = false;
     dataMeta.value = await DataService.getDataMeta(entity.value);
-    dataFiltered.value = await DataService.getData(entity.value, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
+    console.log('DataView > refresh > pageNumber / size : ', pageNumber.value, ' / ', size.value);
+    dataFiltered.value = await DataService.getData(entity.value, pageNumber.value, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
     nbTotalData.value = dataFiltered.value!.nb;
     search.value = "X"; // only to reload filteredData
     search.value = ""; // only to reload filteredData (value changed here from 'X' to '')
@@ -376,6 +376,6 @@ const pageTotal = computed(() => ~~(nbTotalData.value / size.value) + 1);
 const beginCursor = computed(() => size.value * (pageNumber.value - 1) + 1);
 const endCursor = computed(() => size.value * pageNumber.value < nbTotalData.value ? size.value * pageNumber.value : nbTotalData.value);
 const nbCollections = computed(() => fcollections.value.length);
-const labelCollection = computed(() => (nbCollections.value>1)? 'Collections' : 'Collection');
+const labelCollectionList = computed(() => 'Collection List ('+nbCollections.value+')');
 
 </script>
