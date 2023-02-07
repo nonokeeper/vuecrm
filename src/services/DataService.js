@@ -46,7 +46,7 @@ class DataService {
 
   // Get Data
   static async getData (entity, pageNumber, size, metaFilter, operatorFilter, valFilter, token) {
-    //console.log('DataService getData > entity : ', entity);
+    console.log('DataService getData > entity : ', entity);
     //console.log('DataService > getData > metaFilter : ',metaFilter);
     //console.log('DataService > getData > operatorFilter : ',operatorFilter);
     //console.log('DataService > getData > valFilter : ',valFilter);
