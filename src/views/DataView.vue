@@ -114,6 +114,10 @@ const flagEditCollection = ref(false);
 const flagCreateCollection = ref(false);
 const filterCollection = ref(false);
 
+const beginCursor = ref(1);
+const endCursor = ref(1);
+const pageTotal = ref(1);
+
 const navStore = useNavStore();
 const entityStored = navStore.entity;
 entity.value = entityStored;
@@ -139,6 +143,9 @@ onBeforeMount(async () => {
     console.log("DataView > onBeforeMount > dataFiltered : ", dataFiltered.value);
     console.log("DataView > onBeforeMount > dataMeta : ", dataMeta.value);
     nbTotalData.value = dataFiltered.value!.nb;
+    pageTotal.value = ~~(nbTotalData.value / size.value) + 1;
+    beginCursor.value = size.value * (FIRSTPAGE - 1) + 1;
+    endCursor.value = size.value * FIRSTPAGE < nbTotalData.value ? size.value * FIRSTPAGE : nbTotalData.value;
     flagCollection.value = true;
   } else {
     flagListCollection.value = true;
@@ -188,7 +195,7 @@ const created = () => {
 };
 
 const deletion = async (id: string) => {
-  await DataService.deleteData(id, entity);
+  await DataService.deleteData(id, entity.value);
   refresh();
 };
 
@@ -264,9 +271,19 @@ const refresh = async () => {
     refreshText.value = "Loading...";
     loaded.value = false;
     dataMeta.value = await DataService.getDataMeta(entity.value);
-    console.log('DataView > refresh > pageNumber / size : ', pageNumber.value, ' / ', size.value);
+    
+    // check the edited value
+    if (pageNumber.value > pageTotal.value) {
+      pageNumber.value = pageTotal.value;
+    }
+    if (pageNumber.value <= 0) {
+      pageNumber.value = 1;
+    }
     dataFiltered.value = await DataService.getData(entity.value, pageNumber.value, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
     nbTotalData.value = dataFiltered.value!.nb;
+    beginCursor.value = size.value * (pageNumber.value - 1) + 1;
+    endCursor.value = size.value * pageNumber.value < nbTotalData.value ? size.value * pageNumber.value : nbTotalData.value;
+    pageTotal.value = ~~(nbTotalData.value / size.value) + 1;
     search.value = "X"; // only to reload filteredData
     search.value = ""; // only to reload filteredData (value changed here from 'X' to '')
     flagCollection.value = true;
@@ -353,6 +370,7 @@ const openCollection = (name:string) => {
   flagCollection.value = true;
   entity.value = name;
   navStore.setEntity(name);
+  pageNumber.value = FIRSTPAGE;
   refresh();
 }
 
@@ -378,9 +396,6 @@ const searchCollections = async (name:string) => {
 };
 
 // Computed variables
-const pageTotal = computed(() => ~~(nbTotalData.value / size.value) + 1);
-const beginCursor = computed(() => size.value * (pageNumber.value - 1) + 1);
-const endCursor = computed(() => size.value * pageNumber.value < nbTotalData.value ? size.value * pageNumber.value : nbTotalData.value);
 const nbCollections = computed(() => fcollections.value.length);
 const labelCollectionList = computed(() => 'Collection List ('+nbCollections.value+')');
 
