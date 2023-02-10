@@ -1,4 +1,4 @@
-d<template>
+<template>
   <main>
     <div v-if="flagCollection && list && authorized" class="mt-2 mb-4">
       <div class="inline-block space-x-6">
@@ -20,11 +20,6 @@ d<template>
         <add-button v-if="!filterCollection" text="Add Filter" @click="addFilterCollection" />
         <remove-button v-if="filterCollection" text="Remove Filter" @click="removeFilterCollection" />
       </div>
-      <!--
-        <div v-if="filter" class="">
-          <data-filter @reset-filter="resetFilter" @filter-created="filterData" :data-meta="dataMeta"/>
-        </div>
-        -->
     </div>
     
     <div v-if="loaded && list && !authorized" class="mt-2 mb-4">Login is required for this page</div>
@@ -54,11 +49,11 @@ d<template>
       </div>
     </div>
 
-    <collection-list v-if="!flagCollection && flagListCollection && authorized" :title="labelCollectionList" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
-    <collection-edit v-if="!flagCollection && flagEditCollection" @cancelEdit="cancelEditCollection" @save="saveCollection" :collection="collectionName"/>
-    <collection-create v-if="!flagCollection && flagCreateCollection" @cancelCreate="cancelCreateCollection" @create="createCollection"/>
+    <collection-list v-if="!flagCollection && flagListCollection && loaded && authorized" :title="labelCollectionList" :collections="fcollections" @edit="editCollection" @delete="deleteCollection" @open="openCollection"/>
+    <collection-edit v-if="!flagCollection && loaded && flagEditCollection" @cancelEdit="cancelEditCollection" @save="saveCollection" :collection="collectionName"/>
+    <collection-create v-if="!flagCollection && loaded && flagCreateCollection" @cancelCreate="cancelCreateCollection" @create="createCollection"/>
 
-    <data-list v-if="flagCollection && list && loaded && authorized" @edit="getData" @delete="deletion" :data="dataFiltered?.data" :data-meta="dataMeta"/>
+    <data-list v-if="flagCollection && list && loaded && authorized" @edit="getData" @delete="deletion" :data="dataFiltered?.data" :data-meta="dataMeta" :entity="entity"/>
     <data-edit v-if="flagCollection && edit && data" @cancelEdit="cancelEdit" :data="data" :data-meta="dataMeta" :entity="entity"/>
     <data-create v-if="flagCollection && create" @cancelCreate="cancelCreate" @created="created" :data-meta="dataMeta" :entity="entity"/>
 
@@ -69,6 +64,7 @@ d<template>
 import { ref, onBeforeMount, computed } from "vue";
 import DataService from "@/services/DataService";
 import { useUserStore } from "@/store/user";
+import { useNavStore } from "@/store/navigation";
 
 import DataList from "@/components/Data/DataList.vue";
 import DataCreate from '@/components/Data/DataCreate.vue';
@@ -118,7 +114,13 @@ const flagEditCollection = ref(false);
 const flagCreateCollection = ref(false);
 const filterCollection = ref(false);
 
+const navStore = useNavStore();
+const entityStored = navStore.entity;
+entity.value = entityStored;
+
 console.log("DataView > Entity : ", entity.value);
+console.log("DataView > Entity Stored : ", entityStored);
+
 const userStore = useUserStore();
 const user = userStore.user;
 // token variable with accessToken & refreshToken, empty if not connected
@@ -130,14 +132,14 @@ console.log("DataView.vue, user : ", user);
 // Data recovered before displaying results in Template
 onBeforeMount(async () => {
   refreshText.value = "Loading...";
-  loaded.value = false;
   fcollections.value = await CollectionService.findCollections();
   if (entity.value !== '') {
-    dataMeta.value = await DataService.getDataMeta(entity);
-    dataFiltered.value = await DataService.getData(entity, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
+    dataMeta.value = await DataService.getDataMeta(entity.value);
+    dataFiltered.value = await DataService.getData(entity.value, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
     console.log("DataView > onBeforeMount > dataFiltered : ", dataFiltered.value);
     console.log("DataView > onBeforeMount > dataMeta : ", dataMeta.value);
     nbTotalData.value = dataFiltered.value!.nb;
+    flagCollection.value = true;
   } else {
     flagListCollection.value = true;
   }
@@ -267,6 +269,7 @@ const refresh = async () => {
     nbTotalData.value = dataFiltered.value!.nb;
     search.value = "X"; // only to reload filteredData
     search.value = ""; // only to reload filteredData (value changed here from 'X' to '')
+    flagCollection.value = true;
     loaded.value = true;
     refreshText.value = "Refresh";
   } else {
@@ -309,6 +312,8 @@ const first = () => {
 const back = () => {
   flagCollection.value = false;
   entity.value = '';
+  navStore.setEntity('');
+  flagListCollection.value = true;
 }
 
 const openCreate = () => {
@@ -347,6 +352,7 @@ const openCollection = (name:string) => {
   console.log('DataView > openCollection called for '+name);
   flagCollection.value = true;
   entity.value = name;
+  navStore.setEntity(name);
   refresh();
 }
 

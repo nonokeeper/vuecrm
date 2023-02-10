@@ -12,7 +12,7 @@ const pinia = createPinia();
 
 pinia.use( (ctx) => {
   const storeId = ctx.store.$id;
-  console.log(storeId);
+  console.log('main.ts > Store ID : ', storeId);
   const serializer = {
     serialize : JSON.stringify,
     deserialize: JSON.parse

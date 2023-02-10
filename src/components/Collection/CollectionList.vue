@@ -66,6 +66,8 @@ const showConfirmDialog = ref(false);
 const collectionToDelete = ref('');
 const noDeletion = ref(true);
 
+console.log('CollectionList.vue called');
+
 // Functions
 const deletion = (name:string) => {
     showConfirmDialog.value = true;

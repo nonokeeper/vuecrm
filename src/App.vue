@@ -91,12 +91,14 @@ import userRouter from "./router/users.routes";
 import { ref } from "vue";
 import AppLink from "./components/Nav/AppLink.vue";
 import { useUserStore } from "@/store/user";
+import { useNavStore } from "@/store/navigation";
 
 const menu = router.options.routes;
 const defaultMenu = defaultRouter.options.routes;
 const userMenu = userRouter.options.routes;
 const menuOpened = ref(false);
 const userStore = useUserStore();
+const navStore = useNavStore();
 
 const toggleMenu = () => {
   menuOpened.value = !menuOpened.value;

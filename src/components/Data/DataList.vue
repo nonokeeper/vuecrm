@@ -1,6 +1,7 @@
 <template>
 <div class="mt-2 mb-4" :class="showConfirmDialog? 'blur-sm' : ''">
-    <table id="customers" v-if="props.data">
+    Collection : {{ props.entity  }}
+    <table v-if="props.data">
         <thead>
             <tr class="text-left text-white">
                 <th class="px-3 py-2">
@@ -31,12 +32,10 @@
         </tbody>
     </table>
 </div>
-<div v-if="showConfirmDialog"
-    class="fixed text-center inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full"
-	id="deleteCustomerModal">
+<div v-if="showConfirmDialog" class="fixed text-center inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="deleteDataModal">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div v-if="noDeletion" class="mt-3 text-center">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Are you sure to delete this customer <br/>(id = {{ dataToDelete }})?</h3>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Are you sure to delete this document? <br/>(id = {{ dataToDelete }})?</h3>
             <div class="mt-2 px-7 py-3">
                 <p class="text-sm text-gray-500">
                     All data linked to it will also be deleted!
@@ -70,7 +69,6 @@ let dataValues = '';
 const showConfirmDialog = ref(false);
 const noDeletion = ref(true);
 const dataToDelete = ref('');
-//let customersArray = [{}];
 //const searchSubmit = ref(false);
 
 // Functions
@@ -104,21 +102,22 @@ interface DataInterface {
 interface Props {
     data: DataInterface[]|undefined
     dataMeta: DataMeta|undefined
+    entity: string
 };
 interface DataMeta {
     [key: string]: any
 };
 
 const emit = defineEmits<{
-    (e: 'edit', customer: DataInterface|undefined) : void,
+    (e: 'edit', data: DataInterface|undefined) : void,
     (e: 'delete', id:string) : void
 }>();
 
 const props = defineProps<Props>();
 
 const edit = (data: DataInterface|undefined) => {
-    // emit edit event to the parent CustomerView.vue
-    // customer infos transmitted
+    // emit edit event to the parent DataView.vue
+    // data info transmitted
     emit('edit', data);
 };
 
