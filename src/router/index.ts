@@ -6,7 +6,7 @@ const CustomerView = () => import ('@/views/CustomerView.vue');
 const AboutView = () => import ('@/views/AboutView.vue');
 const DataView = () => import ('@/views/DataView.vue');
 const DataExplorerView = () => import ('@/views/DataExplorerView.vue');
-const CollectionView = () => import ('@/trash/CollectionView.vue');
+const CollectionView = () => import ('@/views/CollectionView.vue');
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
