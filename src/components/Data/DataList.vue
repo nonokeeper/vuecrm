@@ -1,6 +1,8 @@
 <template>
 <div class="mt-2 mb-4" :class="showConfirmDialog? 'blur-sm' : ''">
-    Collection : {{ props.entity  }}
+    <div class="inline-block my-2 px-6 py-2.5 dark:bg-gray-200 dark:text-gray-800 bg-gray-600 text-gray-100 font-medium text-xs 
+        leading-tight uppercase rounded-full shadow-md">{{ props.entity  }}
+    </div>
     <table v-if="props.data">
         <thead>
             <tr class="text-left text-white">

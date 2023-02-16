@@ -24,7 +24,7 @@
     
     <div v-if="loaded && list && !authorized" class="mt-2 mb-4">Login is required for this page</div>
     <div v-if="flagCollection && authorized" class="mb-4">
-      <span @click="back" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the collections list</span>
+      <span @click="backCollectionList" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the collections list</span>
     </div>
 
     <div v-if="flagCollection && loaded && authorized" class="grid grid-cols-4 gap-4">
@@ -136,7 +136,6 @@ console.log("DataView.vue, user : ", user);
 // Data recovered before displaying results in Template
 onBeforeMount(async () => {
   refreshText.value = "Loading...";
-  fcollections.value = await CollectionService.findCollections();
   if (entity.value !== '') {
     dataMeta.value = await DataService.getDataMeta(entity.value);
     dataFiltered.value = await DataService.getData(entity.value, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
@@ -148,6 +147,7 @@ onBeforeMount(async () => {
     endCursor.value = size.value * FIRSTPAGE < nbTotalData.value ? size.value * FIRSTPAGE : nbTotalData.value;
     flagCollection.value = true;
   } else {
+    fcollections.value = await CollectionService.findCollections();
     flagListCollection.value = true;
   }
   search.value = "X"; // only to force calculation of filteredData
@@ -227,6 +227,14 @@ const removeFilterCollection = () => {
   valFilter.value = "";
   refresh();
 };
+
+const backCollectionList = async() => {
+  flagCollection.value = false;
+  entity.value = '';
+  navStore.setEntity('');
+  fcollections.value = await CollectionService.findCollections();
+  flagListCollection.value = true;
+}
 
 const filterData = async (meta: string, operator: string, val: string) => {
   refreshText.value = "Loading...";
@@ -326,12 +334,7 @@ const first = () => {
   }
 };
 
-const back = () => {
-  flagCollection.value = false;
-  entity.value = '';
-  navStore.setEntity('');
-  flagListCollection.value = true;
-}
+
 
 const openCreate = () => {
   create.value = true;
@@ -359,7 +362,7 @@ const saveCollection = async (collection:string, field:string, label:string) => 
 };
 
 const editCollection = (name:string) => {
-  //console.log('editCollection, name = '+name);
+  console.log('DataView > editCollection called for '+name);
   flagListCollection.value = false;
   flagEditCollection.value = true;
   collectionName.value = name;
@@ -375,8 +378,8 @@ const openCollection = (name:string) => {
 }
 
 const createCollection = async (name:string) => {
-  flagListCollection.value = false;
   console.log('DataView > createCollection, name = '+name);
+  flagListCollection.value = false;
   const res = await CollectionService.createCollection(name);
   flagCreateCollection.value = false;
   fcollections.value = await CollectionService.findCollections();
@@ -384,15 +387,21 @@ const createCollection = async (name:string) => {
 }
 
 const deleteCollection = async (name:string) => {
+  console.log('DataView > deleteCollection, name = '+name);
   const res = await CollectionService.deleteCollection(name);
   collections.value = await CollectionService.findCollections();
   refresh();
 };
 
 const searchCollections = async (name:string) => {
-  loaded.value = false;
-  fcollections.value = await CollectionService.findCollections(name);
-  loaded.value = true;
+  if (name !== '') {
+    loaded.value = false;
+    fcollections.value = await CollectionService.searchCollection(name);
+    loaded.value = true;
+  } else {
+    // TODO Error Message
+  }
+  
 };
 
 // Computed variables

@@ -27,7 +27,7 @@ pinia.use( (ctx) => {
 
   // listen to changes
   ctx.store.$subscribe((mutation, state) => {
-    console.log('mutation state : ',mutation, state);
+    console.log('main.ts > mutation state : ',mutation, state);
     window.localStorage.setItem(storeId, serializer.serialize(state))
   })
 })

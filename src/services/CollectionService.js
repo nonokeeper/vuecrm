@@ -87,23 +87,25 @@ class CollectionService {
   }
 
   // Search Collections
-  static async findCollections (name) {
-    if (name == '' || name == undefined)
-      try {
-        const res = await axios.get(url)
-        return res.data
-      } catch (err) {
-        console.log('CollectionService findCollections error : ' + err)
-        return (err)
-      }
-    else
-      try {
-        const res = await axios.get(`${url}/${name}`)
-        return res.data
-      } catch (err) {
-        console.log('CollectionService findCollections error : ' + err)
-        return (err)
-      }
+  static async findCollections () {
+    try {
+      const res = await axios.get(url)
+      return res.data
+    } catch (err) {
+      console.log('CollectionService findCollections error : ' + err)
+      return (err)
+    }
+  }
+
+  // Search Collections
+  static async searchCollection (name) {
+    try {
+      const res = await axios.get(`${url}/${name}`)
+      return res.data
+    } catch (err) {
+      console.log('CollectionService searchCollection error : ' + err)
+      return (err)
+    }
   }
 
   // Drop a Collection
