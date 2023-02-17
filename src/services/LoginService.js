@@ -3,7 +3,7 @@ import axios from 'axios'
 const baseURL = import.meta.env.VITE_BASEURL
 const url = baseURL + 'login'
 
-console.log('url : '+url);
+console.log('LoginService > url : '+url);
 
 class LoginService {
 

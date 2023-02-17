@@ -1,7 +1,6 @@
 <script setup lang="ts">
-  import TheWelcome from '@/components/TheWelcome.vue'
   import { useUserStore } from "@/store/user";
-
+  import LoginView from '@/components/Login/LoginView.vue';
   const userStore = useUserStore();
 
   console.log('HomeView, user : ', userStore.user);
@@ -10,6 +9,6 @@
 
 <template>
   <main>
-    Welcome {{ userStore.user?.firstName }}<br/>
+    <LoginView/>
   </main>
 </template>

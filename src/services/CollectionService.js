@@ -3,7 +3,7 @@ import axios from 'axios'
 const baseURL = import.meta.env.VITE_BASEURL
 const url = baseURL + 'collections'
 
-console.log('url : '+url);
+console.log('CollectionService > url : '+url);
 
 class CollectionService {
 
