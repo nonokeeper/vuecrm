@@ -120,7 +120,12 @@ const pageTotal = ref(1);
 
 const navStore = useNavStore();
 const entityStored = navStore.entity;
-entity.value = entityStored;
+
+if (entityStored) {
+  entity.value = entityStored;
+} else {
+  entity.value = '';
+}
 
 console.log("DataView > Entity : ", entity.value);
 console.log("DataView > Entity Stored : ", entityStored);

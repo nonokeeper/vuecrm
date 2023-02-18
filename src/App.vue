@@ -68,7 +68,7 @@
           :to="key.path">{{ key.name }}
         </AppLink>
       </div>
-      <div v-if="isConnected" class="inline-flex">
+      <div v-if="isConnected" class="ml-4 inline-flex">
         <input checked type="checkbox" @click="toggleDarkMode" id="toggle" class="accent-green-600"/>
         <label for="toggle" class="text-gray-800 dark:text-gray-100">Night/Day</label>
       </div>

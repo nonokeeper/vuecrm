@@ -9,7 +9,7 @@ interface navInterface {
 export const useNavStore = defineStore({
     id: 'navigationData',
     state: () => ({
-      entity: ref<String>()
+      entity: ref<string>()
     }),
     getters: {
         getEntity(state) {
