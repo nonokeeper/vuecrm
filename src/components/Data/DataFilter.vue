@@ -4,7 +4,7 @@
         <div class="my-2">
          <select class="dark:bg-cyan-600 mr-2" v-model="filter">
             <option class="" value="">-- Select One --</option>
-            <option class="dark:bg-cyan-600" v-for="(key, index) in props.customerMeta" :key="index" :value="index">{{ key.label }}</option>
+            <option class="dark:bg-cyan-600" v-for="(key, index) in props.dataMeta" :key="index" :value="index">{{ key.label }}</option>
          </select>
          <select class="dark:bg-cyan-600 mr-2" v-model="operator">
             <option selected value="equals" class="dark:bg-cyan-600">Equals</option>
@@ -41,11 +41,11 @@ const resetFilter = () => {
 };
 
 // Interfaces
-interface CustomerInterface {
+interface DataInterface {
     [key: string]: any
 };
 interface Props {
-    customerMeta: CustomerInterface|undefined
+    dataMeta: DataInterface|undefined
 };
 
 // Computed variables

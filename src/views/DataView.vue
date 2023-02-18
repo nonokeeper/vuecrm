@@ -7,11 +7,9 @@
         <add-button v-if="!filter" text="Add Filter" @click="addFilter" />
         <remove-button v-if="filter" text="Remove Filter" @click="removeFilter" />
       </div>
-      <!--
-        <div v-if="filter" class="">
-          <data-filter @reset-filter="resetFilter" @filter-created="filterData" :data-meta="dataMeta"/>
-        </div>
-        -->
+      <div v-if="filter" class="">
+        <data-filter @reset-filter="resetFilter" @filter-created="filterData" :data-meta="dataMeta"/>
+      </div>
     </div>
     <div v-if="!flagCollection && flagListCollection && authorized" class="mt-2 mb-4">
       <div class="inline-block space-x-6">
@@ -23,11 +21,11 @@
     </div>
     
     <div v-if="loaded && list && !authorized" class="mt-2 mb-4">Login is required for this page</div>
-    <div v-if="flagCollection && authorized" class="mb-4">
+    <div v-if="flagCollection && authorized && list" class="mb-4">
       <span @click="backCollectionList" class="text-yellow-800 dark:text-yellow-200 cursor-pointer hover:font-semibold w-1/3">Back to the collections list</span>
     </div>
 
-    <div v-if="flagCollection && loaded && authorized" class="grid grid-cols-4 gap-4">
+    <div v-if="flagCollection && loaded && authorized && list" class="grid grid-cols-4 gap-4">
       <div class="ml-4 col-span-2">
         Showing <span v-if="nbTotalData > 0">{{ beginCursor }} to {{ endCursor }} of </span>{{ nbTotalData }} results
       </div>
@@ -69,13 +67,11 @@ import { useNavStore } from "@/store/navigation";
 import DataList from "@/components/Data/DataList.vue";
 import DataCreate from '@/components/Data/DataCreate.vue';
 import DataEdit from '@/components/Data/DataEdit.vue';
+import DataFilter from '@/components/Data/DataFilter.vue';
 
 import CollectionList from '@/components/Collection/CollectionList.vue';
 import CollectionEdit from '@/components/Collection/CollectionEdit.vue';
 import CollectionCreate from '@/components/Collection/CollectionCreate.vue';
-/* 
-import DataFilter from '@/components/Data/DataFilter.vue';
-*/
 
 import RefreshButton from "@/components/Button/RefreshButton.vue";
 import CreateButton from "@/components/Button/CreateButton.vue";
@@ -249,20 +245,13 @@ const filterData = async (meta: string, operator: string, val: string) => {
   operatorFilter.value = operator;
   valFilter.value = val;
 
-  const metaList = await DataService.getDataMeta();
+  const metaList = await DataService.getDataMeta(entity.value);
   metaType.value = metaList[meta].type;
-  console.log("DataView.vue / filterData() / metaType : ", metaType.value);
-
-  //console.log('DataView.vue / function filterData - filters : ', filters);
-  console.log("DataView.vue / function filterData - token : ", token);
+  console.log("DataView.vue > filterData() > metaType : ", metaType.value);
+  //console.log('DataView.vue > filterData() > filters : ', filters);
+  console.log("DataView.vue > filterData() > token : ", token);
   if (token != "") {
-    dataFiltered.value = await DataService.getData(FIRSTPAGE,
-      size.value,
-      metaFilter.value,
-      operatorFilter.value,
-      valFilter.value,
-      token
-    );
+    dataFiltered.value = await DataService.getData(entity.value, FIRSTPAGE, size.value, metaFilter.value, operatorFilter.value, valFilter.value, token);
     console.log("DataView.vue > filterData() > #dataFiltered : ", dataFiltered.value!.nb);
     nbTotalData.value = dataFiltered.value!.nb;
   }

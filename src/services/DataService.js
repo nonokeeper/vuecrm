@@ -47,9 +47,9 @@ class DataService {
   // Get Data
   static async getData (entity, pageNumber, size, metaFilter, operatorFilter, valFilter, token) {
     console.log('DataService getData > entity : ', entity);
-    //console.log('DataService > getData > metaFilter : ',metaFilter);
-    //console.log('DataService > getData > operatorFilter : ',operatorFilter);
-    //console.log('DataService > getData > valFilter : ',valFilter);
+    console.log('DataService > getData > metaFilter : ',metaFilter);
+    console.log('DataService > getData > operatorFilter : ',operatorFilter);
+    console.log('DataService > getData > valFilter : ',valFilter);
     try {
       //console.log('DataService > getData > try, token : ', token)
       const res = await fetch(`${url}?entity=${entity}&pageNumber=${pageNumber}&size=${size}&meta=${metaFilter}&operator=${operatorFilter}&val=${valFilter}`, {
