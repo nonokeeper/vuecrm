@@ -4,7 +4,7 @@ import HomeView from '@/views/HomeView.vue';
 // Lazy load components
 const CustomerView = () => import ('@/views/CustomerView.vue');
 const DataView = () => import ('@/views/DataView.vue');
-const DataExplorerView = () => import ('@/views/DataExplorerView.vue');
+const ComponentView = () => import ('@/views/Component.vue');
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,7 +22,7 @@ const router = createRouter({
     {
       path: '/component',
       name: 'Component',
-      component: DataExplorerView
+      component: ComponentView
     },
     {
       path: '/data',

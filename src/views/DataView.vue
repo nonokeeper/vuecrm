@@ -10,13 +10,23 @@
       <div v-if="filter" class="">
         <data-filter @reset-filter="resetFilter" @filter-created="filterData" :data-meta="dataMeta"/>
       </div>
+      
     </div>
     <div v-if="!flagCollection && flagListCollection && authorized" class="mt-2 mb-4">
       <div class="inline-block space-x-6">
-        <refresh-button :text="refreshText" @click="refresh()" />
+        <refresh-button :text="refreshText" @click="refresh" />
         <create-button text="New" @click="openCreateCollection" />
         <add-button v-if="!filterCollection" text="Add Filter" @click="addFilterCollection" />
         <remove-button v-if="filterCollection" text="Remove Filter" @click="removeFilterCollection" />
+      </div>
+      <div v-if="filterCollection" class="flex gap-6">
+        <div class="flex-none">
+          <input v-model="search" placeholder="Collection search" type="text" class="mx-2 border border-gray-300 px-4 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
+          <reset-button class="-translate-x-8 absolute mt-1" @click="clearSearch"/>
+        </div>
+        <div class="shrink">
+          <filter-button class="-translate-x-4" @click="searchCollections(search)"/>
+        </div>
       </div>
     </div>
     
@@ -69,6 +79,8 @@ import DataCreate from '@/components/Data/DataCreate.vue';
 import DataEdit from '@/components/Data/DataEdit.vue';
 import DataFilter from '@/components/Data/DataFilter.vue';
 
+import CollectionService from "@/services/CollectionService";
+
 import CollectionList from '@/components/Collection/CollectionList.vue';
 import CollectionEdit from '@/components/Collection/CollectionEdit.vue';
 import CollectionCreate from '@/components/Collection/CollectionCreate.vue';
@@ -77,7 +89,8 @@ import RefreshButton from "@/components/Button/RefreshButton.vue";
 import CreateButton from "@/components/Button/CreateButton.vue";
 import AddButton from "@/components/Button/AddButton.vue";
 import RemoveButton from "@/components/Button/RemoveButton.vue";
-import CollectionService from "@/services/CollectionService";
+import FilterButton from '@/components/Button/FilterButton.vue';
+import ResetButton from '@/components/Button/ResetButton.vue';
 
 const FIRSTPAGE = 1;
 const NBMAX = 20;
@@ -200,7 +213,7 @@ const deletion = async (id: string) => {
   refresh();
 };
 
-// Collection Section
+// BEGIN Collection Section
 
 const cancelEditCollection = () => {
   flagEditCollection.value = false;
@@ -235,7 +248,14 @@ const backCollectionList = async() => {
   navStore.setEntity('');
   fcollections.value = await CollectionService.findCollections();
   flagListCollection.value = true;
-}
+};
+
+const clearSearch = () => {
+  searchCollections('');
+  search.value = '';
+};
+
+// END Collection Section
 
 const filterData = async (meta: string, operator: string, val: string) => {
   refreshText.value = "Loading...";
@@ -328,8 +348,6 @@ const first = () => {
   }
 };
 
-
-
 const openCreate = () => {
   create.value = true;
   list.value = false;
@@ -383,19 +401,15 @@ const createCollection = async (name:string) => {
 const deleteCollection = async (name:string) => {
   console.log('DataView > deleteCollection, name = '+name);
   const res = await CollectionService.deleteCollection(name);
-  collections.value = await CollectionService.findCollections();
+  fcollections.value = await CollectionService.findCollections();
   refresh();
 };
 
 const searchCollections = async (name:string) => {
-  if (name !== '') {
-    loaded.value = false;
-    fcollections.value = await CollectionService.searchCollection(name);
-    loaded.value = true;
-  } else {
-    // TODO Error Message
-  }
-  
+  loaded.value = false;
+  // If name is empty findCollections instead of searchCollection
+  (name !== '')? fcollections.value = await CollectionService.searchCollection(name) : fcollections.value = await CollectionService.findCollections();
+  loaded.value = true;
 };
 
 // Computed variables
