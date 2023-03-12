@@ -50,15 +50,15 @@ app.directive("click-outside", {
 const mainRoutes = router.options.routes;
 const userRoutes = userRouter.options.routes;
 
-var allRoutes: any[] = []
-const routes = allRoutes.concat(mainRoutes, userRoutes);
+var tmpRoutes: any[] = []
+const allRoutes = tmpRoutes.concat(mainRoutes, userRoutes);
 
-const Allrouter = createRouter({
+const allrouters = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: routes
+  routes: allRoutes
 })
 
 app
-.use(Allrouter)
+.use(allrouters)
 .use(pinia)
 .mount('#app')

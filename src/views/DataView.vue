@@ -3,7 +3,6 @@
     <div v-if="flagCollection && list && authorized" class="mt-2 mb-4">
       <div class="inline-block space-x-6">
         <refresh-button :text="refreshText" @click="refresh()" />
-        <create-button text="New" @click="openCreate" />
         <add-button v-if="!filter" text="Add Filter" @click="addFilter" />
         <remove-button v-if="filter" text="Remove Filter" @click="removeFilter" />
       </div>
@@ -13,16 +12,14 @@
       
     </div>
     <div v-if="!flagCollection && flagListCollection && authorized" class="mt-2 mb-4">
-      <div class="inline-block space-x-6">
+      <div class="inline-block space-x-6 mb-4">
         <refresh-button :text="refreshText" @click="refresh" />
-        <create-button text="New" @click="openCreateCollection" />
-        <add-button v-if="!filterCollection" text="Add Filter" @click="addFilterCollection" />
-        <remove-button v-if="filterCollection" text="Remove Filter" @click="removeFilterCollection" />
+        <create-button text="New Collection" @click="openCreateCollection" />
       </div>
-      <div v-if="filterCollection" class="flex gap-6">
+      <div class="flex gap-6">
         <div class="flex-none">
-          <input v-model="search" placeholder="Collection search" type="text" class="mx-2 border border-gray-300 px-4 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
-          <reset-button class="-translate-x-8 absolute mt-1" @click="clearSearch"/>
+          <input v-model="search" placeholder="Collection search" type="text" class="h-10 mx-2 border border-gray-300 px-4 py-1 rounded-xl focus:placeholder-transparent dark:focus:placeholder-transparent dark:placeholder-gray-400 placeholder-gray-400 bg-white dark:bg-cyan-800 text-gray-800 dark:text-gray-100"/>
+          <reset-button class="-translate-x-8 absolute mt-2" @click="clearSearch"/>
         </div>
         <div class="shrink">
           <filter-button class="-translate-x-4" @click="searchCollections(search)"/>
@@ -65,6 +62,10 @@
     <data-edit v-if="flagCollection && edit && data" @cancelEdit="cancelEdit" :data="data" :data-meta="dataMeta" :entity="entity"/>
     <data-create v-if="flagCollection && create" @cancelCreate="cancelCreate" @created="created" :data-meta="dataMeta" :entity="entity"/>
 
+    <div v-if="flagCollection && authorized && list" class="mb-4">
+      <create-button text="New record" @click="openCreate" />
+    </div>
+
   </main>
 </template>
 
@@ -91,6 +92,7 @@ import AddButton from "@/components/Button/AddButton.vue";
 import RemoveButton from "@/components/Button/RemoveButton.vue";
 import FilterButton from '@/components/Button/FilterButton.vue';
 import ResetButton from '@/components/Button/ResetButton.vue';
+import { useRouter } from "vue-router";
 
 const FIRSTPAGE = 1;
 const NBMAX = 20;
@@ -111,7 +113,6 @@ const dataFiltered = ref<DataArrayInterface>();
 const dataMeta = ref<DataInterface>();
 const fcollections = ref([]);
 const collectionName = ref('');
-const collections = ref([]);
 const nbTotalData = ref(0);
 const pageNumber = ref(FIRSTPAGE);
 const size = ref(NBMAX);
@@ -129,6 +130,7 @@ const pageTotal = ref(1);
 
 const navStore = useNavStore();
 const entityStored = navStore.entity;
+const router = useRouter();
 
 if (entityStored) {
   entity.value = entityStored;
@@ -143,12 +145,15 @@ const userStore = useUserStore();
 const user = userStore.user;
 // token variable with accessToken & refreshToken, empty if not connected
 const token = user ? user.accessToken + " " + user.refreshToken : "";
-if (user) {authorized.value = true}
+user? authorized.value = true:authorized.value = false;
 
 console.log("DataView.vue, user : ", user);
 
 // Data recovered before displaying results in Template
 onBeforeMount(async () => {
+  if (authorized.value === false) {
+    router.push({ name: 'Home'});
+  }
   refreshText.value = "Loading...";
   if (entity.value !== '') {
     dataMeta.value = await DataService.getDataMeta(entity.value);
