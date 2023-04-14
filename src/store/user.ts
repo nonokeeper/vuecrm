@@ -9,10 +9,12 @@ interface userInterface {
     "firstName": string,
     "lastName": string,
     "username": string,
+    "email": string,
     "group": string,
+    "roles": object,
     "accessToken": string,
     "refreshToken": string,
-    "roles": object
+    "errorMessage": string
   };
 
 export const useUserStore = defineStore({
@@ -28,10 +30,16 @@ export const useUserStore = defineStore({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ username, password }),
-        });
+        })
         const user:userInterface = await res.json();
-        this.user = user;
-        return user;
+
+        //console.log('store/user.ts > res.status : ', res.status);
+
+        if (res.status == 200) {
+          this.user = user;
+        }
+        //console.log('store/user.ts > user : ', user)
+        return user
       },
       async logout() { 
         this.$reset();

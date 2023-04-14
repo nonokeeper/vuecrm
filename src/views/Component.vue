@@ -56,6 +56,14 @@
             <div class="absolute inset-0 pointer-events-none border border-black/5 rounded-xl dark:border-white/5">
             </div>
         </div>
+        <div class="fa-3x">
+            <i class="fa-solid fa-sync fa-spin p-4"></i>
+            <i class="fa-solid fa-circle-notch fa-spin p-4"></i>
+            <i class="fa-solid fa-cog fa-spin p-4"></i>
+            <i class="fa-solid fa-cog fa-spin fa-spin-reverse p-4"></i>
+            <i class="fa-solid fa-spinner fa-spin-pulse p-4"></i>
+            <i class="fa-solid fa-spinner fa-spin-pulse fa-spin-reverse p-4"></i>
+        </div>
     </div>
 </template>
 

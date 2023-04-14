@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from '@/App.vue'
 import router from '@/router'
 import userRouter from "@/router/users.routes";
-import { createPinia } from "pinia";
+import { createPinia } from 'pinia';
 import './assets/tailwind.css'
 import { createRouter, createWebHistory } from 'vue-router';
 
